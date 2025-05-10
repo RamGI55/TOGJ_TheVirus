@@ -2,11 +2,11 @@
 // Created by hunda on 2025-05-09.
 //
 
-#include "Utils.h"
+#include "GameUtil.h"
 #include <algorithm>
 #include <random>
 
-namespace Utils {
+namespace GameUtil {
     // Loading the json file
     nlohmann::json LoadJson(const std::string& filename) {
         std::ifstream file(filename);

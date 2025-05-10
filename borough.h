@@ -16,14 +16,14 @@ class borough {
     int infectionrates;
 
     public:
-    borough(const std::string& name);
+    borough(const std::string& inName);
     void AddLocation(const locations& inlocation);
     void Updateinfectionrates();
 
     std::string GetName() const {return name;}
     float GetInfectionrate() const {return infectionrates;}
     const std::vector<locations>& GetLocations() const {return location;}
-    locations& GetLocation(int index) {return location[index];}
+    // locations& GetLocation(int index) {return location[index];}
 
 };
 

@@ -37,8 +37,8 @@ add_executable(TOGJ_TheVirus main.cpp
         player.h
         ui.cpp
         ui.h
-        utils.cpp
-        utils.h
+        GameUtil.cpp
+        GameUtil.h
         virus.cpp
         virus.h
         map.cpp

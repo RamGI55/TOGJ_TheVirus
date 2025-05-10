@@ -7,7 +7,8 @@
 #include "items.h"
 #include "ui.h"
 #include "player.h"
-#include "Utils.h"
+#include "GameUtil.h"
+#include "locations.h"
 
 
 game::game() :running(false), Ui(nullptr)  {
@@ -28,14 +29,14 @@ void game::Run() {
 }
 
 void game::ProcessInput(const std::string &command) {
-    std::string lcCommand = Utils::ToLower(command);
+    std::string lcCommand = GameUtil::ToLower(command);
 
     if (lcCommand == "quit" || lcCommand == "q" || lcCommand == "exit") {
         Quit();
         return;
     }
 
-    std::vector<std::string> tokens = Utils::Split(lcCommand, ' ');
+    std::vector<std::string> tokens = GameUtil::Split(lcCommand, ' ');
 
     if (tokens.empty()) {
         Ui->AddMessage("Please enter the command");
@@ -67,6 +68,19 @@ void game::SpawnViruses() {
 }
 
 void game::LoadLocations() {
+    auto OldToronto = std::make_shared<borough>("Old Toronto");
+    OldToronto->AddLocation(locations("Tower", "CN Tower", "Toronto's Landmark tower is now the biggest abandoned towner, now."));
+    OldToronto->AddLocation(locations ("harbour", "Harbourfront", "The most iconic waterfront area is now the hotzone of the virus."));
+    OldToronto->AddLocation(locations("financial", "Financial District", "Heart of the Canadian Financial now turns to the downward spiral."));
+    OldToronto->AddLocation (locations("Square","Yonge-Dundas Square", "The most vibrent place in the Toronto attracts the virus from somewhere"));
+    OldToronto->AddLocation(locations ("Kenshington","Kenshington Market-Chinatown", "Vibrant cultural district is now turned to the dead street"));
+    OldToronto->AddLocation(locations("Kingwest", "King St. West", "The biggest clubgoers place turns infection red zone."));
+
+    Boroughs["OldToronto"] = OldToronto;
+
+    for (locations location : OldToronto->GetLocations()) {
+        location.GenerateDungeon();
+    }
 }
 
 void game::LoacItems() {

@@ -13,6 +13,7 @@
 #define MAP_Y_MAX 50
 
 
+class dungeon;
 class virus;
 class items;
 class locations {
@@ -23,13 +24,17 @@ class locations {
     float baseinfectionrate;
     float infectionrate;
     bool isInfected;
+    std::shared_ptr<dungeon> CurrentDungeon;
 
 
 public:
     locations(const std::string& id, const std::string& name, const std::string& description);
     int GetInfectionrate();
     int GetInfected();
-
+    void UpdateInfectionrate(float delta);
+    void ResetInfectionrate();
+    std::shared_ptr<dungeon> GetDungeon() const {return CurrentDungeon;}
+    void const GenerateDungeon();
 
 };
 

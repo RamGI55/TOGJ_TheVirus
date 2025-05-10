@@ -6,6 +6,9 @@
 #include "locations.h"
 #include <numeric>
 
+borough::borough(const std::string &inName): name(inName), infectionrates(0) {
+}
+
 void borough::AddLocation(const locations &inlocation) {
     location.push_back(inlocation);
     Updateinfectionrates();

@@ -15,7 +15,7 @@
 namespace GameUtil {
     nlohmann::json LoadJson(const std::string& filename);
 
-    int RandomIntger(int min, int max);
+    int RandomInt(int min, int max);
 
     std::vector<std::string> Split(const std::string& s, char delim);
     std::string ToLower(const std::string& s);

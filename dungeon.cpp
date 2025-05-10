@@ -77,8 +77,8 @@ void dungeon::GenerateDungeon() {
     }
 
     for (int i = 0; i < Width*Height/ 10 ; i++) {
-        int x = GameUtil::RandomIntger(1, Width-2);
-        int y = GameUtil::RandomIntger(1, Height-2);
+        int x = GameUtil::RandomInt(1, Width-2);
+        int y = GameUtil::RandomInt(1, Height-2);
 
         if ((x == PlayerX && y == PlayerY) || (x == ExitX && y == ExitY)) {
             continue;
@@ -94,8 +94,8 @@ void dungeon::GenerateDungeon() {
     for (int i = 0; i< 3; i++) {
         int x, y;
         do {
-            x = GameUtil::RandomIntger(1, Width-2);
-            y = GameUtil::RandomIntger(1, Height-2);
+            x = GameUtil::RandomInt(1, Width-2);
+            y = GameUtil::RandomInt(1, Height-2);
         }
         while (Grid[y][x].Type == DungeonCells::EMPTY);
         Grid[y][x].Type = DungeonCells::ITEM;
@@ -105,8 +105,8 @@ void dungeon::GenerateDungeon() {
     for (int i = 0; i< 3 ; i++) {
         int x, y;
         do {
-            x = GameUtil::RandomIntger(1, Width-2);
-            y = GameUtil::RandomIntger(1, Height-2);
+            x = GameUtil::RandomInt(1, Width-2);
+            y = GameUtil::RandomInt(1, Height-2);
         } while (Grid[y][x].Type == DungeonCells::EMPTY);
 
         Grid[y][x].Type = DungeonCells::VIRUS;

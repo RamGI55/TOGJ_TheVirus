@@ -6,7 +6,7 @@
 
 #include "GameUtil.h"
 
-virus::virus(std::string &name, std::string &description, int health, int damage, int attractionFactor, int moveSeped,
+virus::virus(std::string &name, std::string &description, int health, int damage, int attractionFactor, int moveSpeed,
 int criticalRate, float criticalMultiplayer) :
 name(name), description(description), health(health), damage(damage),attractionFactor(attractionFactor),
 moveSpeed(moveSpeed), criticalRate(criticalRate), criticalMultiplier(criticalMultiplayer)

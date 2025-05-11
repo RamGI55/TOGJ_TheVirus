@@ -22,7 +22,7 @@ private:
     float criticalMultiplier;
 
 public:
-    virus(std::string& name, std::string& description, int health, int damage, int attractionFactor, int moveSeped
+    virus(std::string& name, std::string& description, int health, int damage, int attractionFactor, int moveSpeed
         , int criticalRate = 5, float criticalMultiplayer = 1.5f);
 
     // Getters

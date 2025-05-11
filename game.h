@@ -54,7 +54,7 @@ public:
 
 private:
     void StartBattle(std::shared_ptr<virus> enemy);
-    void LoadLocations();
+
     void LoacItems();
     void LoadViruses();
     void SetupInitialGameState();

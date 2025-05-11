@@ -7,24 +7,25 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <memory>
 
 
 class locations;
 class borough {
 
     std::string name;
-    std::vector <locations> location;
+    std::vector <std::shared_ptr<locations>> location;
     int infectionrates;
 
     public:
     borough(const std::string& inName);
-    void AddLocation(const locations& inlocation);
+    void AddLocation(const std::shared_ptr<locations>& inlocation);
     void Updateinfectionrates();
 
     std::string GetName() const {return name;}
     float GetInfectionrate() const {return infectionrates;}
-    const std::vector<locations>& GetLocations() const {return location;}
-    locations& GetLocation(int index) {
+    const std::vector<std::shared_ptr<locations>>& GetLocations() const {return location;}
+    std::shared_ptr<locations> GetLocation(int index) {
         if (index >= 0 && index < location.size()) {
             return location[index];
         }

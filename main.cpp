@@ -2,7 +2,7 @@
 #include "game.h"
 
 int main() {
-   std::shared_ptr<game> const game;
+   auto game = std::make_shared<class game>();
    game->Initialise();
    game->Run();
 

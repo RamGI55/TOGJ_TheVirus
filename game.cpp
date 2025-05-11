@@ -89,7 +89,7 @@ void game::ProcessInput(const std::string &command) {
             Ui->AddMessage("Available locations:");
             const auto& locations = boroughIt->second->GetLocations();
             for (const auto& location : locations) {
-                Ui->AddMessage("- " + location.GetId() + ": " + location.GetName());
+                Ui->AddMessage("- " + location->GetId() + ": " + location->GetName());
             }
 
             // Clear current location when entering new borough
@@ -176,7 +176,7 @@ void game::ProcessvirusMovement() {
 
                     Player->TakeDamage(damage);
 
-                    std::string attackMsg = cell.VirusEntity->GetName(); +  " attacks you for " +
+                    std::string attackMsg = cell.VirusEntity->GetName() +  " attacks you for " +
                         std::to_string(damage) + " damage";
                 }
 
@@ -340,22 +340,6 @@ void game::StartBattle(std::shared_ptr<virus> enemy) {
     }
 }
 
-void game::LoadLocations() {
-    auto OldToronto = std::make_shared<borough>("Old Toronto");
-    OldToronto->AddLocation(locations("Tower", "CN Tower", "Toronto's Landmark tower is now the biggest abandoned towner, now."));
-    OldToronto->AddLocation(locations ("harbour", "Harbourfront", "The most iconic waterfront area is now the hotzone of the virus."));
-    OldToronto->AddLocation(locations("financial", "Financial District", "Heart of the Canadian Financial now turns to the downward spiral."));
-    OldToronto->AddLocation (locations("Square","Yonge-Dundas Square", "The most vibrent place in the Toronto attracts the virus from somewhere"));
-    OldToronto->AddLocation(locations ("Kenshington","Kenshington Market-Chinatown", "Vibrant cultural district is now turned to the dead street"));
-    OldToronto->AddLocation(locations("Kingwest", "King St. West", "The biggest clubgoers place turns infection red zone."));
-
-    Boroughs["OldToronto"] = OldToronto;
-
-    for (locations location : OldToronto->GetLocations()) {
-        location.GenerateDungeon();
-    }
-}
-
 void game::LoacItems() {
 }
 
@@ -439,8 +423,8 @@ void game::LoadLocationsFromJson(const std::string &filename) {
         auto boroughIt = Boroughs.find(GameUtil::ToLower(boroughName));
         if (boroughIt != Boroughs.end()) {
             // Create and add the location
-            locations location(id, name, description);
-            location.SetBaseInfectionRate(baseInfectionRate);
+            auto location = std::make_shared<locations>(id, name, description);
+            location->SetBaseInfectionRate(baseInfectionRate);
 
             // Set dungeon parameters if present
             if (locationJson.contains("dungeonWidth") && locationJson.contains("dungeonHeight")) {
@@ -563,29 +547,29 @@ void game::EnterLocation(const std::string &locationId) {
 
     // Find the location with matching ID
     for (int i = 0; i < locationsVector.size(); i++) {
-        const locations& loc = locationsVector[i];
-        if (loc.GetId() == locationId) {
+        const auto& locationptr = locationsVector[i];
+        if (locationptr->GetId() == locationId) {
             // Found the location
-            Ui->AddMessage("You've entered " + loc.GetName() + ".");
-            Ui->AddMessage(loc.GetDescription());
+            Ui->AddMessage("You've entered " + locationptr->GetName() + ".");
+            Ui->AddMessage(locationptr->GetDescription());
 
             // Get a non-const reference to the location
-            locations& location = currentBorough->GetLocation(i);
+            auto location = currentBorough->GetLocation(i);
 
             // Store current location
-            currentLocation = std::make_shared<locations>(location);
+            currentLocation = location;
 
             // Generate a new dungeon for this location
-            location.GenerateDungeon();
+            location->GenerateDungeon();
 
             // Populate the dungeon with items and viruses
-            PopulateDungeon(location.GetDungeon());
+            PopulateDungeon(location->GetDungeon());
 
             // Set the player's current dungeon
-            Player->SetCurrentDungeon(location.GetDungeon());
+            Player->SetCurrentDungeon(location->GetDungeon());
 
             // Inform the player they've entered the dungeon
-            Ui->AddMessage("You've entered the dungeon at " + location.GetName() + ".");
+            Ui->AddMessage("You've entered the dungeon at " + location->GetName() + ".");
             Ui->AddMessage("Use arrow keys to move. Watch out for viruses!");
 
             return;

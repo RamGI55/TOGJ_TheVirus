@@ -31,12 +31,15 @@ private:
     ftxui::Component InputComponent;
     ftxui::Component MainContainer;
 
+    ftxui::ScreenInteractive* screen = nullptr;
+
     // BattleState
     std::shared_ptr<virus> CurrentVirus; // For the battle UI.
     bool inBattle = false;
 
 public:
     ui();
+    ~ui();
     void Initialise(game* gameptr);
     void Run();
 
@@ -49,6 +52,7 @@ public:
     ftxui::Element RenderMessages() const;
     ftxui::Element RenderStatus() const;
     ftxui::Element RenderDungeonView();
+    ftxui::Element RenderDungeon(const dungeon& dungeon);
 
     // Battle UI
     void StartBattle (std::shared_ptr<virus> enemy);

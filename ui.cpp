@@ -56,12 +56,30 @@ ui::ui()  {
 
 }
 
+ui::~ui() {
+    // Ensure components are properly cleaned up
+    MainContainer = nullptr;
+    InputComponent = nullptr;
+
+    // Clean up the screen
+    delete screen;
+    screen = nullptr;
+
+    // Clear any other resources
+    MessageLog.clear();
+    CurrentVirus = nullptr;
+}
+
 void ui::Initialise(game* gameptr) {
     GameInstance = gameptr;
 
+    MainContainer = Container::Vertical({});
+
     // initialise the input component
     InputComponent = Input(&InputBuffer, "Command : ");
-    auto renderer = Renderer([&] {
+
+    // Create the renderer with proper captures
+    auto renderer = Renderer([this] {
         Elements elements;
         elements.push_back(RenderStatus());
 
@@ -75,7 +93,7 @@ void ui::Initialise(game* gameptr) {
         return vbox(elements);
     });
 
-    auto EventHandler = CatchEvent([&](Event event) {
+    auto EventHandler = CatchEvent([this](Event event) {
         if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
             if (event == Event::ArrowUp) {
                 GameInstance->MovePlayer(0, -1);
@@ -106,19 +124,26 @@ void ui::Initialise(game* gameptr) {
     });
 
     MainContainer |= EventHandler;
-    MainContainer = Container::Vertical({
+    /*MainContainer = Container::Vertical({
     Renderer(MainContainer, [&]() {
         return renderer->Render();
         })
-    });
+    });*/
+    MainContainer = Container::Vertical({renderer});
 }
 
 void ui::Run() {
-    // Create a screen
-    auto screen = ScreenInteractive::TerminalOutput();
+    // Create a screen and store it as a member
+    if (screen == nullptr) {
+        screen = new ftxui::ScreenInteractive(ftxui::ScreenInteractive::TerminalOutput());
+    }
 
-    // Run the main loop
-    screen.Loop(MainContainer);
+    // Run the main loop with proper error handling
+    try {
+        screen->Loop(MainContainer);
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in UI loop: " << e.what() << std::endl;
+    }
 }
 
 void ui::AddMessage(const std::string &message) {
@@ -166,7 +191,7 @@ ftxui::Element ui::RenderStatus() const {
 }
 
 ftxui::Element ui::RenderDungeonView() {
-   if (!GameInstance || !GameInstance->GetPlayer() || !GameInstance->GetPlayer()->GetCurrentDungeon()) {
+    if (!GameInstance || !GameInstance->GetPlayer() || !GameInstance->GetPlayer()->GetCurrentDungeon()) {
         return text("No dungeon to display");
     }
 

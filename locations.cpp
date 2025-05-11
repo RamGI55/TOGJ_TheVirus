@@ -14,6 +14,7 @@ baseinfectionrate(0.f), infectionrate(0.f), isInfected(false){
 int locations::GetInfectionrate() {
     infectionrate = baseinfectionrate;
     isInfected = (infectionrate >=1.0f);
+    return static_cast<int>(infectionrate*100);
 }
 
 int locations::GetInfected() {

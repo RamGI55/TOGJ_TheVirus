@@ -31,7 +31,6 @@ private:
     ftxui::Component InputComponent;
     ftxui::Component MainContainer;
 
-    std::shared_ptr<game> CurrentGame; // DEPCRATED
     // BattleState
     std::shared_ptr<virus> CurrentVirus; // For the battle UI.
     bool inBattle = false;
@@ -43,8 +42,6 @@ public:
 
     // Message handling
     void AddMessage(const std::string& message);
-
-    void Render(); // DECRPTED
     // Command Processing
     void ProcessCommand(const std::string& command);
 
@@ -59,20 +56,7 @@ public:
 
     // input helpers
     std::string GetInputBlocking(const std::string& input);
-
-    ftxui::Element RenderBattleUI(std::shared_ptr<virus> enemy);
-    void ShowBattleButtons(std::shared_ptr<virus> enemy);
     std::string GetInput();
-    void SetGame(std::shared_ptr<game> game) {CurrentGame = game;}
-    std::shared_ptr<game> GetGame() const {return CurrentGame;}
-
-private:
-    ftxui::Element RenderLocationInfo();
-    ftxui::Element RenderPlayerInfo();
-    ftxui::Element RenderMessageLog();
-    ftxui::Element RenderInputField();
-
-
 };
 
 

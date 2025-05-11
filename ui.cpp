@@ -4,6 +4,7 @@
 
 #include "ui.h"
 
+#include "borough.h"
 #include "dungeon.h"
 #include "game.h"
 #include "GameUtil.h"
@@ -51,50 +52,49 @@ ftxui::Element ui::RenderDungeon(const dungeon &dungeon) {
 
 }
 
-ui::ui()    : InputBuffer("")
-    , MessageLog()
-    , CurrentGame(nullptr)
-    , InputField()
-    , inBattle(false)
-    , CurrentVirus(nullptr) {
+ui::ui()  {
+
 }
 
 void ui::Initialise(game* gameptr) {
-    InputField = Input(&InputBuffer, "Enter the Command");
-    // Setup the screen
-    screen = ftxui::ScreenInteractive::TerminalOutput(); // TODO::ERROR!
-    // ERROR: Attempt to use deleted ScreenInteractive &ftxui::ScreenInteractive::operator=(const ScreenInteractive &)
+    GameInstance = gameptr;
 
-    auto renderComponent = Renderer([this] {
-        return vbox({
-        RenderLocationInfo(),
-        RenderPlayerInfo(),
-        RenderDungeon(*CurrentGame->GetPlayer()->GetCurrentDungeon()), // TODO:: which parameter?
-        RenderMessageLog(),
-        RenderInputField()});
+    // initialise the input component
+    InputComponent = Input(&InputBuffer, "Command : ");
+    auto renderer = Renderer([&] {
+        Elements elements;
+        elements.push_back(RenderStatus());
+
+        if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
+            elements.push_back(RenderDungeonView());
+        }
+        elements.push_back(
+            hbox({
+            text("> "), InputComponent->Render()})
+            );
+        return vbox(elements);
     });
 
-    auto inputComponent = InputField;
-    auto gameComponent = CatchEvent([this](const Event& event) {
-        auto game = GetGame(); // TODO::ERROR.
-        if (game && game->GetPlayer() && game->GetPlayer()->GetCurrentDungeon()) {
+    auto EventHandler = CatchEvent([&](Event event) {
+        if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
             if (event == Event::ArrowUp) {
-                game->MovePlayer(0, -1);
+                GameInstance->MovePlayer(0, -1);
                 return true;
             }
             if (event == Event::ArrowDown) {
-                game->MovePlayer(0, 1);
-                return true;
-            }
-            if (event == Event::ArrowRight) {
-                game->MovePlayer(1,0 );
+                GameInstance->MovePlayer(0, 1);
                 return true;
             }
             if (event == Event::ArrowLeft) {
-                game->MovePlayer(-1,0 );
+                GameInstance->MovePlayer(-1, 0);
+                return true;
+            }
+            if (event == Event::ArrowRight) {
+                GameInstance->MovePlayer(1, 0);
                 return true;
             }
         }
+        // Handle enter key for command input
         if (event == Event::Return) {
             if (!InputBuffer.empty()) {
                 ProcessCommand(InputBuffer);
@@ -105,204 +105,203 @@ void ui::Initialise(game* gameptr) {
         return false;
     });
 
-    auto EnterPressed = [this] {
-        if (!InputBuffer.empty()) {
-            ProcessCommand(InputBuffer);
-            InputBuffer.clear();
-            Render();
-        }
-        return true;
-    };
-
-    InputField |= CatchEvent([this, EnterPressed](const Event &event) {
-        if (event == Event::Return) {
-            return EnterPressed();
-        }
-        return false;
+    MainContainer |= EventHandler;
+    MainContainer = Container::Vertical({
+    Renderer(MainContainer, [&]() {
+        return renderer->Render();
+        })
     });
+}
 
-    // comabine all components
+void ui::Run() {
+    // Create a screen
+    auto screen = ScreenInteractive::TerminalOutput();
 
-
-    ftxui::Component components;
-    components->Add(inputComponent);
-    components->Add(gameComponent); // TODO:: ERROR Cannot convert braced-init-list to parameter type Components
-
-    auto container = Container::Vertical(components);
-    screen.Loop(renderComponent | gameComponent);
+    // Run the main loop
+    screen.Loop(MainContainer);
 }
 
 void ui::AddMessage(const std::string &message) {
     MessageLog.push_back(message);
     // Erase the Message log over 20s
-    if (MessageLog.size() > 20) {
+    const size_t maxMessages = 20;
+    if (MessageLog.size() > maxMessages) {
         MessageLog.erase(MessageLog.begin());
     }
 }
 
-void ui::Render() {
-}
-
 void ui::ProcessCommand(const std::string &command) {
-
+    if (GameInstance) {
+        GameInstance->ProcessInput(command);
+    }
 }
 
-ftxui::Element ui::RenderBattleUI(std::shared_ptr<virus> enemy) {
-    CurrentVirus = enemy;
+ftxui::Element ui::RenderMessages() const {
+    Elements message_elements;
+    for (const auto& message : MessageLog) {
+        message_elements.push_back(text(message));
+    }
+
+    return window(text("Messages"), vbox(message_elements)) | size(HEIGHT, LESS_THAN, 10);
+}
+
+ftxui::Element ui::RenderStatus() const {
+
+    if (!GameInstance || !GameInstance->GetPlayer()) {
+        text("No player information available");
+    }
+    auto player = GameInstance->GetPlayer();
+
+    Elements status_elements;
+    status_elements.push_back(text("Health: " + std::to_string(player->GetHealth()) +
+        "/" + std::to_string(player->GetMaxHealth())));
+    status_elements.push_back(text("Action Points: " + std::to_string(player->GetActionpoints())));
+    status_elements.push_back(text("Virus Attraction: " + std::to_string(player->GetVirusattraction()) + "%"));
+
+    // Add location information if available
+    if (player->GetCurrentBorough()) {
+        status_elements.push_back(text("Borough: " + player->GetCurrentBorough()->GetName()));
+    }
+    return window(text("Status"), vbox(status_elements));
+}
+
+ftxui::Element ui::RenderDungeonView() {
+   if (!GameInstance || !GameInstance->GetPlayer() || !GameInstance->GetPlayer()->GetCurrentDungeon()) {
+        return text("No dungeon to display");
+    }
+
+    auto dungeon_ptr = GameInstance->GetPlayer()->GetCurrentDungeon();
+    auto player_pos = dungeon_ptr->GetPlayerPosition();
+    int width = dungeon_ptr->GetWidth();
+    int height = dungeon_ptr->GetHeight();
+
+    // Create a canvas for the dungeon (doubled size for better visibility)
+    auto c = Canvas(width * 2, height * 2);
+
+    // Draw each cell of the dungeon
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            const auto& cell = dungeon_ptr->GetCell(x, y);
+
+            // Choose color based on cell type
+            Color color;
+            switch (cell.Type) {
+                case DungeonCells::WALL:
+                    color = Color::GrayDark;
+                    break;
+                case DungeonCells::ENTRANCE:
+                    color = Color::Blue;
+                    break;
+                case DungeonCells::EXIT:
+                    color = Color::GreenLight;
+                    break;
+                case DungeonCells::ITEM:
+                    color = Color::Yellow;
+                    break;
+                case DungeonCells::VIRUS:
+                    color = Color::Red;
+                    break;
+                default:
+                    color = Color::Black;
+                    break;
+            }
+
+            // Draw a 2x2 block of colored points for each cell
+            for (int dy = 0; dy < 2; ++dy) {
+                for (int dx = 0; dx < 2; ++dx) {
+                    c.DrawPoint(x * 2 + dx, y * 2 + dy, true, color);
+                }
+            }
+        }
+    }
+
+    // Draw the player
+    for (int dy = 0; dy < 2; ++dy) {
+        for (int dx = 0; dx < 2; ++dx) {
+            c.DrawPoint(player_pos.first * 2 + dx, player_pos.second * 2 + dy, true, Color::White);
+        }
+    }
+
+    // Return the canvas
+    return window(text("Dungeon"), canvas(c));
+}
+
+void ui::StartBattle(std::shared_ptr<virus> enemy) {
     inBattle = true;
-    auto player = CurrentGame->GetPlayer();
+    CurrentVirus = enemy;
 
-    // Battle Display
-    std::string playerHealth = "HP: " + std::to_string(player->GetHealth()); + "/" +
-        std::to_string(player->GetMaxHealth());
-    std::string playerAP = "AP: "+ std::to_string(player->GetHealth()); + "/10"; // Max AP is hardcoded.. for now...
-    std::string enemyHealth = "HP: " + std::to_string(enemy->GetHealth());
-
-    // Create player and enemy status displays
-    Elements playerStatus = {
-    text("Player: ")| bold,
-    text(playerHealth),
-    text(playerAP),
-    text("Virus Attraction: " + std::to_string(player->GetVirusattraction()) + "%")};
-
-    Elements enemyStatus = {
-        text("Enemy: " + enemy->GetName()) | bold | color(Color::Red),
-        text(enemyHealth),
-        text(enemy->GetDescription())
-    };
-
-
-    // Battle buttons
-    auto attackButton = Button("Attack", [this]() {
-        if (CurrentGame && CurrentGame->GetPlayer() && CurrentVirus) {
-            bool defeated = CurrentGame->GetPlayer()->AttackVirus(CurrentVirus);
-            if (defeated) {
-                AddMessage("You defeated the " + CurrentVirus->GetName() + "!");
-                inBattle = false;
-            } else {
-                AddMessage("You attacked the " + CurrentVirus->GetName() + "!");
-                // Enemy's turn would be processed in the actual implementation
-            }
-        }
-    });
-
-    auto itemButton = Button("Use Item", [this]() {
-        AddMessage("Choose an item to use:");
-        // Show item selection in the actual implementation
-    });
-
-    auto runButton = Button("Run", [this]() {
-        AddMessage("Attempting to escape...");
-        // Run logic would be processed in the actual implementation
-    });
-    // Arrange the battle UI
-
-    ftxui::Elements buttonElements;
-    buttonElements.push_back(attackButton|border);
-    buttonElements.push_back(itemButton | border);
-    buttonElements.push_back(runButton | border);
-    return vbox({
-        hbox({
-            vbox(playerStatus) | flex,
-            vbox(enemyStatus) | flex
-        }),
-        separator(),
-        hbox(buttonElements) | center // TODO ERROR ::Cannot convert braced-init-list to parameter type Elements
-    }) | border | center;
-
+    AddMessage("Battle started with " + enemy->GetName() + "!");
+    AddMessage(enemy->GetDescription());
 }
 
-void ui::ShowBattleButtons(std::shared_ptr<virus> enemy) {
-    // Set up clickable buttons for battle
-    std::vector<Component> battleButtons;
+void ui::EndBattle() {
+    inBattle = false;
+    CurrentVirus = nullptr;
 
-    // Attack button
-    auto attackButton = Button("Attack", [this, enemy]() {
-        if (CurrentGame && CurrentGame->GetPlayer()) {
-            bool defeated = CurrentGame->GetPlayer()->AttackVirus(enemy);
-            if (defeated) {
-                AddMessage("You defeated the " + enemy->GetName() + "!");
-                inBattle = false;
-                // Remove enemy from dungeon
-            } else {
-                AddMessage("You attacked the " + enemy->GetName() + "!");
-                // Process enemy turn
-            }
-        }
-    });
-    battleButtons.push_back(attackButton);
+    AddMessage("Battle ended!");
+}
 
-    // Items button
-    auto itemsButton = Button("Items", [this]() {
-        // Show items menu
-        AddMessage("Choose an item:");
-        // Implementation for selecting and using items
-    });
-    battleButtons.push_back(itemsButton);
+std::string ui::GetInputBlocking(const std::string &input) {
+    AddMessage(input);
 
-    // Run button
-    auto runButton = Button("Run", [this, enemy]() {
-        int escapeChance = 50 - enemy->GetAttractionFactor() * 5;
-        if (GameUtil::RandomInt(1, 100) <= escapeChance) {
-            AddMessage("You successfully escaped!");
-            inBattle = false;
-        } else {
-            AddMessage("You failed to escape!");
-            // Process enemy turn
-        }
-    });
-    battleButtons.push_back(runButton);
-
-    // Create a container with the buttons
-    auto buttonContainer = Container::Horizontal(battleButtons);
-
-    // Render the button container
-    // In a real implementation, this would be added to the screen
+    // In a real implementation, you'd use a modal dialog or similar
+    // For now, we'll just return a placeholder
+    return "1";  // Default to the first option
 }
 
 std::string ui::GetInput() {
-    // Block until user enters a command
-    std::string input;
+    // Create a simple input dialog
+    std::string result;
+    bool input_done = false;
 
-    // Set up a temporary input component
-    auto inputComp = Input(&input, "");
-    auto enterPressed = [&input]() {
-        return !input.empty();
-    };
+    // Add a prompt to the message log
+    AddMessage("Enter your choice: ");
 
-    // Add event handling for the Enter key
-    inputComp |= CatchEvent([&enterPressed](const Event& event) {
+    // Create a temporary input component
+    auto temp_input = Input(&result, "");
+
+    // Create a button to confirm input
+    auto confirm_button = Button("Confirm", [&]() {
+        input_done = true;
+    });
+
+    // Create a container for these components
+    auto container = Container::Vertical({
+        temp_input,
+        confirm_button
+    });
+
+    // Setup a modal dialog
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // Create an exit flag for the modal
+    bool modal_exit = false;
+
+    // Set up a special renderer for the modal
+    auto modal_renderer = Renderer(container, [&]() {
+        return vbox({
+            text("Enter your choice:"),
+            temp_input->Render(),
+            confirm_button->Render()
+        }) | border;
+    });
+
+    // Set up an event handler to exit when done
+    container |= CatchEvent([&](Event event) {
         if (event == Event::Return) {
-            return enterPressed();
+            input_done = true;
+            modal_exit = true;
+            return true;
+        }
+        if (input_done) {
+            modal_exit = true;
+            return true;
         }
         return false;
     });
 
-    // Render the component and wait for input
-    auto document = vbox({
-        text("Enter your choice:"),
-        inputComp->Render()
-    });
+    // Run the modal until input is done
+    screen.Loop(modal_renderer);
 
-    auto screen = Screen::Create(Terminal::Size());
-    screen.Clear();
-    document.Render(screen);
-    screen.Print();
-
-    // In a real implementation, this would handle input events until Enter is pressed
-
-    return input;
-}
-
-
-ftxui::Element ui::RenderLocationInfo() {
-}
-
-ftxui::Element ui::RenderPlayerInfo() {
-}
-
-ftxui::Element ui::RenderMessageLog() {
-}
-
-ftxui::Element ui::RenderInputField() {
+    return result;
 }

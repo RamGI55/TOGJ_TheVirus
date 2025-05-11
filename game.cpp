@@ -21,8 +21,8 @@ void game::Initialise() {
 
     // Create UI
     Ui = std::make_shared<ui>();
-    //Ui->SetGame(this);
-    Ui->SetGame(shared_from_this()); // substitution of this in the raw pointer.
+
+    Ui->Initialise(this);
 
     // Load all data from JSON files
     LoadDataFromJson();
@@ -42,16 +42,11 @@ void game::Initialise() {
     Ui->AddMessage("THE VIRUS");
     Ui->AddMessage("Press Start to Start the Game");
     Ui->AddMessage("Type 'help' for commands");
+    Ui->Run();
 }
 
 void game::Run() {
 
-    Ui->Initialise();
-    Ui->AddMessage("THE VIRUS");
-    Ui->AddMessage("Press Start to Start the Game");
-    Ui->AddMessage("Type 'help' for commands");
-
-    Ui->Render();
 }
 
 void game::ProcessInput(const std::string &command) {

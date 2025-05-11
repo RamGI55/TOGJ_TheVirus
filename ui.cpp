@@ -51,17 +51,25 @@ ftxui::Element ui::RenderDungeon(const dungeon &dungeon) {
 
 }
 
-void ui::Initialise() {
+ui::ui()    : InputBuffer("")
+    , MessageLog()
+    , CurrentGame(nullptr)
+    , InputField()
+    , inBattle(false)
+    , CurrentVirus(nullptr) {
+}
+
+void ui::Initialise(game* gameptr) {
     InputField = Input(&InputBuffer, "Enter the Command");
     // Setup the screen
-    Screen = ScreenInteractive::TerminalOutput(); // TODO::ERROR!
+    screen = ftxui::ScreenInteractive::TerminalOutput(); // TODO::ERROR!
     // ERROR: Attempt to use deleted ScreenInteractive &ftxui::ScreenInteractive::operator=(const ScreenInteractive &)
 
     auto renderComponent = Renderer([this] {
         return vbox({
         RenderLocationInfo(),
         RenderPlayerInfo(),
-        RenderDungeon(), // TODO:: which parameter?
+        RenderDungeon(*CurrentGame->GetPlayer()->GetCurrentDungeon()), // TODO:: which parameter?
         RenderMessageLog(),
         RenderInputField()});
     });
@@ -114,12 +122,14 @@ void ui::Initialise() {
     });
 
     // comabine all components
-    auto component = Container::Vertical({
-    inputComponent,
-    gameComponent
-    }); // TODO:: ERROR Cannot convert braced-init-list to parameter type Components
 
-    Screen.Loop(renderComponent| component);
+
+    ftxui::Component components;
+    components->Add(inputComponent);
+    components->Add(gameComponent); // TODO:: ERROR Cannot convert braced-init-list to parameter type Components
+
+    auto container = Container::Vertical(components);
+    screen.Loop(renderComponent | gameComponent);
 }
 
 void ui::AddMessage(const std::string &message) {
@@ -161,6 +171,7 @@ ftxui::Element ui::RenderBattleUI(std::shared_ptr<virus> enemy) {
         text(enemy->GetDescription())
     };
 
+
     // Battle buttons
     auto attackButton = Button("Attack", [this]() {
         if (CurrentGame && CurrentGame->GetPlayer() && CurrentVirus) {
@@ -185,17 +196,18 @@ ftxui::Element ui::RenderBattleUI(std::shared_ptr<virus> enemy) {
         // Run logic would be processed in the actual implementation
     });
     // Arrange the battle UI
+
+    ftxui::Elements buttonElements;
+    buttonElements.push_back(attackButton|border);
+    buttonElements.push_back(itemButton | border);
+    buttonElements.push_back(runButton | border);
     return vbox({
         hbox({
             vbox(playerStatus) | flex,
             vbox(enemyStatus) | flex
         }),
         separator(),
-        hbox({
-            attackButton | border,
-            itemButton | border,
-            runButton | border
-        }) | center // TODO ERROR ::Cannot convert braced-init-list to parameter type Elements
+        hbox(buttonElements) | center // TODO ERROR ::Cannot convert braced-init-list to parameter type Elements
     }) | border | center;
 
 }
@@ -272,9 +284,10 @@ std::string ui::GetInput() {
         inputComp->Render()
     });
 
-    Screen.Clear();
-    Render(Screen, document); // TODO ERROR::Function has 0 parameters, but is called with 2 arguments
-    Screen.Print();
+    auto screen = Screen::Create(Terminal::Size());
+    screen.Clear();
+    document.Render(screen);
+    screen.Print();
 
     // In a real implementation, this would handle input events until Enter is pressed
 

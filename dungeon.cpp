@@ -11,10 +11,9 @@
 #include "GameUtil.h"
 
 dungeon::dungeon(const std::string &name, int width, int height):
-Name(name), Width (width), Height (height), PlayerX(1), PlayerY(1), ExitX(Width-2), ExitY(Height-2),InfectionRate(0.1f){
+Name(name), Width (width), Height (height), PlayerX(1), PlayerY(1), ExitX(Width-2), ExitY(Height-2),InfectionRate(0.1f),initialVirusCount(0){
 
     Grid.resize(height, std::vector<DungeonCells>(width));
-
     GenerateDungeon();
 }
 
@@ -46,7 +45,8 @@ void dungeon::CheckThePathToExit() {
 
             if (nx >= 0 && nx < Width && ny >= 0 && ny < Height &&
                 Grid [ny][nx].Type != DungeonCells::WALL && !visited[ny][nx]){
-                queue.push({nx, ny}); visited[ny][nx] = true;
+                queue.push({nx, ny});
+                visited[ny][nx] = true;
             }
         }
     }
@@ -90,27 +90,27 @@ void dungeon::GenerateDungeon() {
     Grid[PlayerY][PlayerX].Type = DungeonCells::ENTRANCE;
     Grid[ExitY][ExitX].Type = DungeonCells::EXIT;
 
-    // place the items - must change the hardcoded number 3.
-    for (int i = 0; i< 3; i++) {
+    // Place items
+    for (int i = 0; i < initialItemCount; i++) {
         int x, y;
         do {
             x = GameUtil::RandomInt(1, Width-2);
             y = GameUtil::RandomInt(1, Height-2);
-        }
-        while (Grid[y][x].Type == DungeonCells::EMPTY);
+        } while (Grid[y][x].Type != DungeonCells::EMPTY);
+
         Grid[y][x].Type = DungeonCells::ITEM;
     }
 
-    // Place the viruses - must change the hard coded number 5
-    for (int i = 0; i< 3 ; i++) {
+    // Place viruses
+    for (int i = 0; i < initialVirusCount; i++) {
         int x, y;
         do {
             x = GameUtil::RandomInt(1, Width-2);
             y = GameUtil::RandomInt(1, Height-2);
-        } while (Grid[y][x].Type == DungeonCells::EMPTY);
+        } while (Grid[y][x].Type != DungeonCells::EMPTY);
 
         Grid[y][x].Type = DungeonCells::VIRUS;
-        // VIRUS Entity is in here.
+        virusPositions.push_back({x, y});
     }
 
     CheckThePathToExit();
@@ -120,7 +120,7 @@ bool dungeon::MovePlayer(int dx, int dy) {
     int newX = PlayerX + dx;
     int newY = PlayerY + dy;
 
-    if (newX >= 0 && newX < Width && newY >= 0 && newY < Height) {
+    if (newX < 0 || newX >= Width || newY < 0 || newY >= Height) {
         return false;
     }
     if (Grid[newY][newX].Type == DungeonCells::WALL) {
@@ -215,14 +215,14 @@ void dungeon::MoveViruses(int playerAttractionLevel) {
 }
 
 void dungeon::Addvirus(int x, int y, std::shared_ptr<virus> v) {
-     if (x >= 0 && x < Width && y >= 0 && y < Height && Grid[y][x].Type == DungeonCells::EMPTY) {
-         Grid[y][x].Type = DungeonCells::VIRUS;
-         Grid[y][x].VirusEntity = v;
-         Viruses.push_back(v);
+    if (x >= 0 && x < Width && y >= 0 && y < Height && Grid[y][x].Type == DungeonCells::EMPTY) {
+        Grid[y][x].Type = DungeonCells::VIRUS;
+        Grid[y][x].VirusEntity = v;
+        Viruses.push_back(v);
 
          // Update the Infectionrate
-         UpdateInfectionRate();
-     }
+        UpdateInfectionRate();
+    }
 }
 
 void dungeon::AddItem(int x, int y, std::shared_ptr<items> i) {
@@ -264,9 +264,12 @@ void dungeon::UpdateInfectionRate() {
 
     // TotalVirus / RemainViruses
     // TODO::Totalvirus must be stroed as the parameter, has to be randomised by the location.
+    float totalViruses = static_cast<float>(initialVirusCount);
+    if (totalViruses <= 0) totalViruses =1.0f;
+
     float remainingviruses = static_cast<float>(Viruses.size());
 
-    // TODO::infection rate here
+    InfectionRate = remainingviruses / totalViruses;
 }
 
 

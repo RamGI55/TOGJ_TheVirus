@@ -22,12 +22,12 @@ private:
     float criticalMultiplier;
 
 public:
-    virus(std::string& name, std::string& description, int health, int damage, int attractionFactor, int moveSpeed
+    virus(std::string name, std::string description, int health, int damage, int attractionFactor, int moveSpeed
         , int criticalRate = 5, float criticalMultiplayer = 1.5f);
 
     // Getters
-    const std::string& GetName() const {return name;}
-    const std::string& GetDescription() const {return description;}
+    std::string GetName() const {return name;}
+    std::string GetDescription() const {return description;}
     int GetHealth() const {return health;}
     int GetDamage() const {return damage;}
     int GetAttractionFactor() const {return attractionFactor;}

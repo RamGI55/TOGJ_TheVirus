@@ -4,6 +4,7 @@
 
 #ifndef BOROUGH_H
 #define BOROUGH_H
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -23,7 +24,12 @@ class borough {
     std::string GetName() const {return name;}
     float GetInfectionrate() const {return infectionrates;}
     const std::vector<locations>& GetLocations() const {return location;}
-    // locations& GetLocation(int index) {return location[index];}
+    locations& GetLocation(int index) {
+        if (index >= 0 && index < location.size()) {
+            return location[index];
+        }
+        throw std::out_of_range("Location index out of range");
+    }
 
 };
 

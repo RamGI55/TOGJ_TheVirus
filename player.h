@@ -14,6 +14,7 @@ class virus;
 class dungeon;
 class borough;
 class items;
+class location;
 class player {
     std::string name;
     int maxhealth;
@@ -25,6 +26,7 @@ class player {
     std::vector<std::shared_ptr<items>> inventory;
     std::shared_ptr<borough> currentBorough;
     std::shared_ptr<dungeon> currentDungeon;
+    std::shared_ptr<location> currentLocation;
 
 public:
     player(const std::string &name);
@@ -57,13 +59,13 @@ public:
 
     // Movement and Locations
     void SetCurrentBorough(std::shared_ptr<borough> borough) {currentBorough = borough;}
-        std::shared_ptr<class borough>GetCurrentBorough() const {return currentBorough;}
-    void SetCurrenDungeon(std::shared_ptr<dungeon> dungeon){currentDungeon = dungeon;}
+    std::shared_ptr<class borough>GetCurrentBorough() const {return currentBorough;}
+    void SetCurrentDungeon(std::shared_ptr<dungeon> dungeon){currentDungeon = dungeon;}
     std::shared_ptr<dungeon> GetCurrentDungeon() const {return currentDungeon;}
 
     bool MoveInDungeon(int dx, int dy);
 
-
+    void GetCurrentLocation(std::shared_ptr<location> location){currentLocation = location;}
 };
 
 

@@ -12,7 +12,8 @@ baseinfectionrate(0.f), infectionrate(0.f), isInfected(false){
 }
 
 int locations::GetInfectionrate() {
-    return static_cast<int>(infectionrate * 100);
+    infectionrate = baseinfectionrate;
+    isInfected = (infectionrate >=1.0f);
 }
 
 int locations::GetInfected() {
@@ -30,8 +31,16 @@ void locations::ResetInfectionrate() {
 }
 
 void const locations::GenerateDungeon() {
-    CurrentDungeon = std::make_shared<dungeon>(name);
+    // Create a new dungeon with parameters from JSON
+    CurrentDungeon = std::make_shared<dungeon>(name, dungeonWidth, dungeonHeight);
 
+    // Configure initial viruses and items count
+    CurrentDungeon->SetInitialCounts(dungeonInitialViruses, dungeonInitialItems);
+
+    // Generate the dungeon
+    CurrentDungeon->GenerateDungeon();
+
+    // Update infection rate based on the dungeon
     infectionrate = CurrentDungeon->GetInfectionRate();
 
 }

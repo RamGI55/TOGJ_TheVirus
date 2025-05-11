@@ -36,6 +36,8 @@ private:
     int PlayerX, PlayerY;
     int ExitX, ExitY;
     float InfectionRate; // this must be same as the location's infection rate. dungeon == location.
+    int initialVirusCount = 5;// Default values
+    int initialItemCount = 3;
 
     std::vector<std::shared_ptr<items>> DungeonItems;
     std::vector<std::shared_ptr<virus>> Viruses;
@@ -72,6 +74,10 @@ public:
 
     void UpdateInfectionRate();
 
+    void SetInitialCounts(int viruses, int items) {
+        initialVirusCount = viruses;
+        initialItemCount = items;
+    }
 private:
 
 public:

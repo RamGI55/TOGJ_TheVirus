@@ -55,4 +55,5 @@ target_link_libraries(TOGJ_TheVirus
         PRIVATE ftxui::component
         PRIVATE nlohmann_json::nlohmann_json
 )
-
+#json file implant
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

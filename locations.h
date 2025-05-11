@@ -25,6 +25,10 @@ class locations {
     float infectionrate;
     bool isInfected;
     std::shared_ptr<dungeon> CurrentDungeon;
+    int dungeonWidth = 20;      // Default values
+    int dungeonHeight = 20;
+    int dungeonInitialViruses = 5;
+    int dungeonInitialItems = 3;
 
 
 public:
@@ -36,8 +40,18 @@ public:
     std::shared_ptr<dungeon> GetDungeon() const {return CurrentDungeon;}
     void const GenerateDungeon();
 
-};
+    std::string GetDescription() const {return description;}
+    std::string GetName() const {return name;}
+    std::string GetId() const {return id;}
 
+    void SetBaseInfectionRate(float base) {baseinfectionrate = base;}
+    void SetDungeonParameters(int width, int height, int initialViruses, int initialItems) {
+        dungeonWidth = width;
+        dungeonHeight = height;
+        dungeonInitialViruses = initialViruses;
+        dungeonInitialItems = initialItems;
+    }
+};
 
 
 #endif //LOCATIONS_H

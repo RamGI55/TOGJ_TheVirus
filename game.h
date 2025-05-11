@@ -10,16 +10,20 @@
 #include <memory>
 #include <vector>
 
+class locations;
 class virus;
 class borough;
 class items;
 class ui;
 class player;
 class utils;
-class game {
+class dungeon;
+class game : public std::enable_shared_from_this<game>{
 private:
     bool running;
-
+    std::shared_ptr<game> GetPtr() {
+        return shared_from_this();
+    }
     std::shared_ptr<player> Player;
     std::map<std::string, std::shared_ptr<borough>> Boroughs;
     std::map<std::string, std::shared_ptr<items>> Items;
@@ -55,6 +59,24 @@ private:
     void LoadViruses();
     void SetupInitialGameState();
     void HandleCollision(int x, int y);
+
+    // loading Jsons
+    void LoadDataFromJson();
+    void LoadBoroughsFromJson(const std::string& filename);
+    void LoadLocationsFromJson(const std::string& filename);
+    void LoadVirusesFromJson(const std::string& filename);
+    void LoadItemsFromJson(const std::string& filename);
+
+    void InitialisePlayerItems();
+
+    std::shared_ptr<virus> CreateVirusFromType(const std::string& virusId);
+    std::shared_ptr<items> CreateItemFromType(const std::string& itemId);
+    std::shared_ptr<locations> currentLocation;
+
+    void EnterLocation(const std::string& locationId);
+    void EnterDungeon(const std::string& locationId); // Also add this
+    void PopulateDungeon(std::shared_ptr<dungeon> dungeon);
+
 
 };
 

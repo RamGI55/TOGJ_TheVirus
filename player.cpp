@@ -11,9 +11,8 @@
 #include "items.h"
 #include "virus.h"
 
-player::player(const std::string &name) : name(name), maxhealth(150), actionpoints (10), virusattraction(0),
+player::player(const std::string &name) : name(name), maxhealth(150), health(150), actionpoints (10), virusattraction(0),
 criticalrate(10), criticalmultiplier(2.0f){
-    health = maxhealth;
     UpdateVirusAttraction();
 }
 

@@ -1,0 +1,10 @@
+﻿
+{
+  "boroughs": [
+    {
+      "name": "Old Toronto",
+      "description": "The Centre of the Toronto.",
+      "lockdownThreshold": 1.0
+    }
+  ]
+}

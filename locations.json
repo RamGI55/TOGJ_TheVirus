@@ -1,0 +1,70 @@
+﻿{
+  "locations": [
+    {
+      "id": "tower",
+      "name": "CN Tower",
+      "description": "Toronto's landmark tower is now abandoned.",
+      "borough": "Old Toronto",
+      "baseInfectionRate": 0.3,
+      "dungeonWidth": 15,
+      "dungeonHeight": 30,
+      "initialViruses": 5,
+      "initialItems": 3
+    },
+    {
+      "id": "harbour",
+      "name": "Harbourfront",
+      "description": "The iconic waterfront area is now a hotzone.",
+      "borough": "Old Toronto",
+      "baseInfectionRate": 0.5,
+      "dungeonWidth": 25,
+      "dungeonHeight": 20,
+      "initialViruses": 7,
+      "initialItems": 4
+    },
+    {
+      "id": "financial",
+      "name": "Financial District",
+      "description": "Heart of the Canadian financial now turned to the downward spiral.",
+      "borough": "Old Toronto",
+      "baseInfectionRate": 0.4,
+      "dungeonWidth": 22,
+      "dungeonHeight": 22,
+      "initialViruses": 6,
+      "initialItems": 3
+    },
+    {
+      "id": "square",
+      "name": "Yonge-Dundas Square",
+      "description": "The most vibrant place in Toronto attracts viruses from somewhere.",
+      "borough": "Old Toronto",
+      "baseInfectionRate": 0.6,
+      "dungeonWidth": 25,
+      "dungeonHeight": 25,
+      "initialViruses": 8,
+      "initialItems": 5
+    },
+    {
+      "id": "kensington",
+      "name": "Kensington Market-Chinatown",
+      "description": "Vibrant cultural district is now turned to dead streets.",
+      "borough": "Old Toronto",
+      "baseInfectionRate": 0.45,
+      "dungeonWidth": 20,
+      "dungeonHeight": 20,
+      "initialViruses": 5,
+      "initialItems": 4
+    },
+    {
+      "id": "kingwest",
+      "name": "King St. West",
+      "description": "The biggest clubgoers place turns infection red zone.",
+      "borough": "Old Toronto",
+      "baseInfectionRate": 0.55,
+      "dungeonWidth": 22,
+      "dungeonHeight": 22,
+      "initialViruses": 7,
+      "initialItems": 4
+    }
+  ]
+}

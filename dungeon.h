@@ -39,6 +39,7 @@ private:
 
     std::vector<std::shared_ptr<items>> DungeonItems;
     std::vector<std::shared_ptr<virus>> Viruses;
+    std::vector<std::pair<int, int>> virusPositions;
 public:
     dungeon (const std::string& name, int width = 25, int height =25);
 
@@ -55,13 +56,17 @@ public:
     int GetHeight() const {return Height;}
     float GetInfectionRate() const {return InfectionRate;}
 
+
     DungeonCells& GetCell(int x, int y);
     const DungeonCells& GetCell(int x, int y) const;
 
+
+    void MoveViruses(int playerAttractionLevel);
     void Addvirus(int x, int y, std::shared_ptr<virus> v);
     void AddItem(int x, int y, std::shared_ptr<items> item);
     void Removevirus (int x, int y);
     void RemoveItem(int x, int y);
+    std::vector<std::pair<int, int>> GetVirusPositions() const {return virusPositions; }
 
     std::pair<int, int> GetPlayerPosition() const {return std::make_pair(PlayerX, PlayerY);}
 

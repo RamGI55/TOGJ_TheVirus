@@ -116,6 +116,22 @@ void dungeon::GenerateDungeon() {
     CheckThePathToExit();
 }
 
+bool dungeon::MovePlayer(int dx, int dy) {
+    int newX = PlayerX + dx;
+    int newY = PlayerY + dy;
+
+    if (newX >= 0 && newX < Width && newY >= 0 && newY < Height) {
+        return false;
+    }
+    if (Grid[newY][newX].Type == DungeonCells::WALL) {
+        return false;
+    }
+
+    PlayerX = newX;
+    PlayerY = newY;
+    return true;
+}
+
 bool dungeon::AtExit() const {
     return PlayerX == ExitX && PlayerY == ExitY;
 }
@@ -128,11 +144,83 @@ const DungeonCells & dungeon::GetCell(int x, int y) const {
     return Grid [y][x];
 }
 
+void dungeon::MoveViruses(int playerAttractionLevel) {
+    if (PlayerX < 0 || PlayerY < 0) return;
+
+    auto virusPositionsCopy = virusPositions;
+
+    for (auto&pos :virusPositionsCopy) {
+        int vx = pos.first;
+        int vy = pos.second;
+        if (Grid[vy][vx].Type == DungeonCells::VIRUS || !Grid[vy][vx].VirusEntity) {
+            continue;
+        }
+        auto virus = Grid[vy][vx].VirusEntity;
+
+        int moveChance = virus-> GetMoveSpeed() * 10 + (playerAttractionLevel / 10);
+        if (GameUtil::RandomInt (0, 100) > moveChance) {
+            continue;
+        }
+
+        int dx = 0, dy = 0;
+
+        if (playerAttractionLevel > 30 && GameUtil::RandomInt (0, 100) < playerAttractionLevel) {
+            // move toward to the player
+            if (PlayerX > vx) dx = 1;
+            else if (PlayerX < vx) dx = -1;
+
+            if (PlayerX > vy) dy = 1;
+            else if (PlayerY > vy) dy = -1;
+
+            if (dx != 0 && dy != 0) {
+                if (GameUtil::RandomInt (0, 1) == 0) {
+                    dx = 0;
+                }
+                else {
+                    dy =0;
+                }
+            }
+        }
+        else {
+            // Random Movement
+            int dir = GameUtil::RandomInt (0,3);
+            switch (dir) {
+                case 0: dy = -1; break; // North
+                case 1: dx = 1;  break; // East
+                case 2: dy = 1;  break; // South
+                case 3: dx = -1; break; // West
+            }
+        }
+
+        // Calcuate new position
+        int newX = vx + dx;
+        int newY = vy + dy;
+
+        if (newX >= 0 && newX < Width && newY >= 0 && newY < Height
+            && Grid[newY][newX].Type == DungeonCells::EMPTY) {
+
+            // Move the virus to the new position
+            Grid[newY][newX].Type = DungeonCells::VIRUS;
+            Grid[newY][newX].VirusEntity = virus;
+            Grid[vy][vx].Type = DungeonCells::EMPTY;
+            Grid[vy][vx].VirusEntity = nullptr;
+
+            // Update virus position in our tracking
+            auto it = std::find(virusPositions.begin(), virusPositions.end(), pos);
+            if (it != virusPositions.end()) {
+                *it = {newX, newY};
+            }
+        }
+    }
+}
+
 void dungeon::Addvirus(int x, int y, std::shared_ptr<virus> v) {
-     if (x >= 0 && x < Width && y >= 0 && y < Height) {
+     if (x >= 0 && x < Width && y >= 0 && y < Height && Grid[y][x].Type == DungeonCells::EMPTY) {
          Grid[y][x].Type = DungeonCells::VIRUS;
          Grid[y][x].VirusEntity = v;
          Viruses.push_back(v);
+
+         // Update the Infectionrate
          UpdateInfectionRate();
      }
 }
@@ -147,14 +235,14 @@ void dungeon::AddItem(int x, int y, std::shared_ptr<items> i) {
 
 void dungeon::Removevirus(int x, int y) {
     if (x >= 0 && x < Width && y >= 0 && y < Height && Grid[y][x].Type == DungeonCells::VIRUS) {
-        auto it = std::find(Viruses.begin(), Viruses.end(), Grid[y][x].VirusEntity);
-        if (it != Viruses.end()) {
-            Viruses.erase(it);
-        }
 
         Grid[y][x].Type = DungeonCells::EMPTY;
         Grid[y][x].VirusEntity = nullptr;
 
+        auto it = std::find(Viruses.begin(), Viruses.end(), Grid[y][x].VirusEntity);
+        if (it != Viruses.end()) {
+            Viruses.erase(it);
+        }
         UpdateInfectionRate();
     }
 }
@@ -175,7 +263,10 @@ void dungeon::RemoveItem(int x, int y) {
 void dungeon::UpdateInfectionRate() {
 
     // TotalVirus / RemainViruses
-    // Totalvirus must be stroed as the parameter, has to be randomised by the location.
+    // TODO::Totalvirus must be stroed as the parameter, has to be randomised by the location.
+    float remainingviruses = static_cast<float>(Viruses.size());
+
+    // TODO::infection rate here
 }
 
 

@@ -1,0 +1,50 @@
+﻿{
+  "viruses": [
+    {
+      "id": "basic",
+      "name": "Common Virus",
+      "description": "A standard virus with low health and damage.",
+      "health": 10,
+      "damage": 2,
+      "attractionFactor": 1,
+      "moveSpeed": 1,
+      "criticalRate": 5,
+      "criticalMultiplier": 1.5
+    },
+    {
+      "id": "strong",
+      "name": "Tough Virus",
+      "description": "A stronger virus with high health but low damage.",
+      "health": 20,
+      "damage": 3,
+      "attractionFactor": 2,
+      "moveSpeed": 1,
+      "criticalRate": 5,
+      "criticalMultiplier": 1.5
+    },
+    {
+      "id": "infectious",
+      "name": "Infectious Virus",
+      "description": "Highly contagious virus that attracts other viruses.",
+      "health": 15,
+      "damage": 3,
+      "attractionFactor": 5,
+      "moveSpeed": 2,
+      "criticalRate": 5,
+      "criticalMultiplier": 1.5
+    },
+    {
+      "id": "boss",
+      "name": "King of RACCON",
+      "description": "A dangerous Raccon, the real king of the Toronto.",
+      "health": 30,
+      "damage": 5,
+      "attractionFactor": 3,
+      "moveSpeed": 2,
+      "canRegenerate": true,
+      "regenAmount": 2,
+      "criticalRate": 10,
+      "criticalMultiplier": 2.0
+    }
+  ]
+}

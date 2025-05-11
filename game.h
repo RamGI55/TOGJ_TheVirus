@@ -38,14 +38,23 @@ public:
     bool isRunning() const {return running;}
     void Quit() { running = false; }
 
+    // Movement functions
+    void MovePlayer(int dx, int dy);
+    void ProcessvirusMovement();
+    void ExitDungeon(bool completed);
+    // Infection rate functions
+    void UpdateInfectionRates(float delta);
+
     std::shared_ptr<player> GetPlayer() const {return Player;}
     std::shared_ptr<ui> GetUI() const {return Ui;}
 
 private:
+    void StartBattle(std::shared_ptr<virus> enemy);
     void LoadLocations();
     void LoacItems();
     void LoadViruses();
     void SetupInitialGameState();
+    void HandleCollision(int x, int y);
 
 };
 

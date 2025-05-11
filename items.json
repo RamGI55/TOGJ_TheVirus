@@ -1,0 +1,72 @@
+﻿{
+  "items": [
+    {
+      "id": "healthkit",
+      "name": "Health Kit",
+      "description": "Restores 10 health points.",
+      "healthBoost": 10,
+      "damageBoost": 0,
+      "attractionModifier": 0,
+      "actionPointBoost": 0,
+      "consumable": true,
+      "infectionRateImpact": 0.0
+    },
+    {
+      "id": "cleaningtool",
+      "name": "Cleaning Tool",
+      "description": "Increases damage against viruses by 3.",
+      "healthBoost": 0,
+      "damageBoost": 3,
+      "attractionModifier": 5,
+      "actionPointBoost": 5,
+      "consumable": true,
+      "infectionRateImpact": 0.0
+
+    },
+    {
+      "id": "stealthdevice",
+      "name": "Stealth Device",
+      "description": "Reduces virus attraction by 2.",
+      "healthBoost": 0,
+      "damageBoost": 0,
+      "attractionModifier": -10,
+      "actionPointBoost": 0,
+      "consumable": false,
+      "infectionRateImpact": -0.05
+    },
+    {
+      "id": "powerboost",
+      "name": "Power Boost",
+      "description": "Increases damage by 5 but also increases attraction.",
+      "healthBoost": 0,
+      "damageBoost": 5,
+      "attractionModifier": 15,
+      "actionPointBoost": 0,
+      "consumable": false,
+      "infectionRateImpact": 0.1
+    },
+    {
+      "id": "virusscanner",
+      "name": "Virus Scanner",
+      "description": "Reveals all viruses in the dungeon but slightly increases attraction.",
+      "healthBoost": 0,
+      "damageBoost": 1,
+      "attractionModifier": 5,
+      "revealViruses": true,
+      "actionPointBoost": 0,
+      "consumable": false,
+      "infectionRateImpact": 0.1
+    },
+    {
+      "id": "actionpotion",
+      "name": "Action Point Potion",
+      "description": "Restores 5 action points.",
+      "healthBoost": 0,
+      "damageBoost": 0,
+      "attractionModifier": 0,
+      "actionPointBoost": 5,
+      "consumable": true,
+      "infectionRateImpact": 0.0
+    }
+  ]
+}

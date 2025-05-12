@@ -50,11 +50,13 @@ public:
     bool IsActive() const { return menuActive; }
     ftxui::Component GetMenuContainer() const {return menuContainer;}
 
-private:
-    // Helper methods
     void ShowHelp();
     void StartGame();
     void ShowTitle() const;
+
+private:
+    // Helper methods
+
 
     // Button components
     ftxui::Component startButton;

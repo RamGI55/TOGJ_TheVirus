@@ -101,12 +101,17 @@ ui::~ui() {
 
 void ui::Initialise(game* gameptr) {
 
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr);
+    /*std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);*/
     GameInstance = gameptr;
 
     screen = new ftxui::ScreenInteractive(ftxui::ScreenInteractive::TerminalOutput());
     screen->TrackMouse(true);
+
+    // Initialize input component
+    InputBuffer = "";  // Make sure this is empty
+    InputComponent = Input(&InputBuffer, "Command: ");
+
 
     // Initialize map and menu
     gameMap->LoadFromJson("data/boroughs.json", "data/locations.json");
@@ -118,8 +123,6 @@ void ui::Initialise(game* gameptr) {
 
     AddMessage("Type 'help' for commands or 'start' to begin the game");
 
-    // Initialize the input component
-    InputComponent = Input(&InputBuffer, "Command : ");
 
     // Create the renderer with proper captures
     auto renderer = Renderer([this] {
@@ -155,33 +158,44 @@ void ui::Initialise(game* gameptr) {
             );
         return vbox(elements);
     });
+    InputComponent |= Renderer([](Element inner) {
+    return hbox({
+        text("> ") | color(Color::Green),
+        inner | bgcolor(Color::Black) | color(Color::White)
+        });
+    });
 
     // Create main container first
     MainContainer = Container::Vertical({renderer});
 
     // Then add event handler that allows event propagation
     MainContainer |= CatchEvent([this](Event event) {
-           // Only handle specific events
-           if (event == Event::Return && !InputBuffer.empty()) {
-               std::string command = InputBuffer;
-               InputBuffer.clear();
-               ProcessCommand(command);
-               return true;
-           }
+        if (event == Event::Return) {
+            if (!InputBuffer.empty()) {
+                std::string command = InputBuffer;
+                InputBuffer.clear();
+
+               // Debug the command that's about to be processed
+                std::cerr << "Processing command: " << command << std::endl;
+
+               // Process the command directly here
+                ProcessCommand(command);
+                return true;
+            }
 
            // Handle arrow keys only in dungeon mode
-           if (currentState == GameState::DUNGEON &&
-               GameInstance && GameInstance->GetPlayer() &&
-               GameInstance->GetPlayer()->GetCurrentDungeon()) {
-               if (event == Event::ArrowUp) {
-                   GameInstance->MovePlayer(0, -1);
-                   return true;
-               }
+            if (currentState == GameState::DUNGEON &&
+                GameInstance && GameInstance->GetPlayer() &&
+                GameInstance->GetPlayer()->GetCurrentDungeon()) {
+                if (event == Event::ArrowUp) {
+                    GameInstance->MovePlayer(0, -1);
+                    return true;
+                }
                // Other arrow keys...
-           }
-
-           return false;  // Let other events propagate
-       });
+            }
+        }
+        return false;  // Let other events propagate
+    });
 }
 
 void ui::Run() {
@@ -190,20 +204,7 @@ void ui::Run() {
         std::cerr << "Error: Screen not initialized" << std::endl;
         return;
     }
-    screen->TrackMouse(true);  // Explicitly enable mouse support
-    /*
-    // Add this: ensure screen is refreshed regularly
-    auto refresh_timer = std::thread([this]() {
-        while (GameInstance && GameInstance->isRunning()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            screen->PostEvent(Event::Custom);
-        }
-    });
-    refresh_timer.detach(); // Let it run independently
-    */
-
-    //InputComponent->TakeFocus();
-    // Run the main loop with proper error handling
+    screen->TrackMouse();  // Explicitly enable mouse support
     try {
         screen->Loop(MainContainer);
     } catch (const std::exception& e) {
@@ -221,12 +222,13 @@ void ui::AddMessage(const std::string &message) {
 }
 
 void ui::ProcessCommand(const std::string &command) {
+
     AddMessage("DEBUG: Processing command: '" + command + "'");
-    if (currentState == GameState::MENU) {
+    /*if (currentState == GameState::MENU) {
         if (mainMenu->HandleCommand(command)) {
             return;
         }
-    }
+    }*/
     // Process common commands across all states
     std::string lcCommand = GameUtil::ToLower(command);
 
@@ -234,6 +236,21 @@ void ui::ProcessCommand(const std::string &command) {
         // Show appropriate help based on state
         switch (currentState) {
             case GameState::MENU:
+                if (lcCommand == "start") {
+                    AddMessage("Starting game...");
+                    StartGame();
+                    return;
+                }
+                else if (lcCommand == "help") {
+                    mainMenu->ShowHelp();
+                    return;
+                }
+                else if (lcCommand == "quit" || lcCommand == "exit") {
+                    if (GameInstance) {
+                        GameInstance->Quit();
+                    }
+                    return;
+                }
                 // Menu help handled by mainMenu
                 break;
 

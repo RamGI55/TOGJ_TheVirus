@@ -163,6 +163,7 @@ bool mainmenu::HandleCommand(const std::string &command) {
     }
 
     std::string lcCommand = GameUtil::ToLower(command);
+    std::cerr << "MainMenu received command: " << lcCommand << std::endl;
 
     if (lcCommand == "start") {
         StartGame();

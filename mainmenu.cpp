@@ -25,24 +25,24 @@ void mainmenu::Initialize(game *gamePtr, std::shared_ptr<map> mapPtr) {
         onStartGame = [] {};
     }
 
-    // Create buttons with proper styling and callbacks
+    // Change to add button options:
     auto buttonOption = ButtonOption();
     buttonOption.Border();
+    buttonOption.Animated(); // Add animation to make clicks visible
 
-    // Create buttons with appropriate callbacks
     startButton = Button("Start Game", [this]() {
         this->StartGame();
-    });
+    }, buttonOption);
 
     helpButton = Button("Help", [this]() {
         this->ShowHelp();
-    });
+    }, buttonOption);
 
     quitButton = Button("Quit", [this]() {
         if (this->GameInstance) {
             this->GameInstance->Quit();
         }
-    });
+    }, buttonOption);
 
     // Create a container for the buttons
     menuContainer = Container::Vertical({
@@ -199,6 +199,7 @@ void mainmenu::ShowHelp() {
 }
 
 void mainmenu::StartGame() {
+    onAddMessage("DEBUG: StartGame called");
     onAddMessage("Starting the game...");
     onAddMessage("Your mission is to cleanse the virus from key locations in Toronto.");
 

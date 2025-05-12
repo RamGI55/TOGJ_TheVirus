@@ -153,7 +153,7 @@ void ui::Initialise(game* gameptr) {
         return vbox(elements);
     });
 
-    auto EventHandler = CatchEvent([this](Event event) {
+    /*auto EventHandler = CatchEvent([this](Event event) {
         if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
             if (event == Event::ArrowUp) {
                 GameInstance->MovePlayer(0, -1);
@@ -193,7 +193,39 @@ void ui::Initialise(game* gameptr) {
     });
 
     MainContainer |= EventHandler;
+    MainContainer = Container::Vertical({renderer});*/
+    // Create main container first
     MainContainer = Container::Vertical({renderer});
+
+    // Then add event handler that allows event propagation
+    MainContainer |= CatchEvent([this](Event event) {
+        // Handle arrow key movement
+        if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
+            if (event == Event::ArrowUp) {
+                GameInstance->MovePlayer(0, -1);
+                return true;
+            }
+            // ... other arrow keys
+        }
+
+        // Handle enter for commands but DON'T return true for mouse events
+        if (event == Event::Return && !InputBuffer.empty()) {
+            // Command processing logic
+            if (currentState == GameState::MENU) {
+                if (mainMenu->HandleCommand(InputBuffer)) {
+                    InputBuffer.clear();
+                    return true;
+                }
+            }
+
+            ProcessCommand(InputBuffer);
+            InputBuffer.clear();
+            return true;
+        }
+
+        // Critical: Don't consume other events
+        return false;
+    });
 }
 
 void ui::Run() {
@@ -203,6 +235,7 @@ void ui::Run() {
         screen->TrackMouse(true);  // Explicitly enable mouse support
     }
 
+    InputComponent->TakeFocus();
     // Run the main loop with proper error handling
     try {
         screen->Loop(MainContainer);
@@ -221,6 +254,7 @@ void ui::AddMessage(const std::string &message) {
 }
 
 void ui::ProcessCommand(const std::string &command) {
+    AddMessage("DEBUG: Processing command: '" + command + "'");
     if (currentState == GameState::MENU) {
         if (mainMenu->HandleCommand(command)) {
             return;
@@ -368,8 +402,11 @@ ftxui::Element ui::RenderDungeonView() {
 
 void ui::StartGame() {
     SetState(GameState::PLAYING);
-    AddMessage("You are in Old Toronto, find the ground zero virus outbreak and clensing it");
+    AddMessage("You are in Old Toronto, find the ground zero virus outbreak and cleansing it");
     AddMessage("Type 'help' for available commands.");
+
+    // Add this line to force UI refresh
+    UpdateMainContainer();
 }
 
 void ui::StartBattle(std::shared_ptr<virus> enemy) {
@@ -454,4 +491,10 @@ std::string ui::GetInput() {
     screen.Loop(modal_renderer);
 
     return result;
+}
+
+void ui::UpdateMainContainer() {
+    if (screen) {
+        screen->PostEvent(Event::Custom);
+    }
 }

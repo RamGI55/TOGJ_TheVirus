@@ -8,7 +8,10 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <filesystem>
+#include <fstream>
 #include <vector>
+#include "GameState.h"
 
 class locations;
 class virus;
@@ -30,6 +33,7 @@ private:
     std::map<std::string, std::shared_ptr<virus>> viruses;
 
     std::shared_ptr<ui> Ui;
+    GameState currentState = GameState::MENU;
 public:
     game();
 
@@ -42,18 +46,26 @@ public:
     bool isRunning() const {return running;}
     void Quit() { running = false; }
 
+    // State Management
+    void SetState(GameStateNS::GameState state);
+    GameStateNS::GameState GameState() const {return currentState; }
+
     // Movement functions
     void MovePlayer(int dx, int dy);
     void ProcessvirusMovement();
     void ExitDungeon(bool completed);
+
     // Infection rate functions
     void UpdateInfectionRates(float delta);
 
+    // Accessors
     std::shared_ptr<player> GetPlayer() const {return Player;}
     std::shared_ptr<ui> GetUI() const {return Ui;}
+    const std::map<std::string, std::shared_ptr<borough>>& GetBoroughs() const {return Boroughs;}
 
 private:
     void StartBattle(std::shared_ptr<virus> enemy);
+    void EndBattle(bool playerWon); // for outcomes
 
     void LoacItems();
     void LoadViruses();
@@ -76,6 +88,11 @@ private:
     void EnterLocation(const std::string& locationId);
     void EnterDungeon(const std::string& locationId); // Also add this
     void PopulateDungeon(std::shared_ptr<dungeon> dungeon);
+
+    // Game Progression - check the status;
+    void CheckGameEndConditions();
+    void AreAllBoroughsInfected() const;
+    bool AreAllVirusCleaned() const;
 
 
 };

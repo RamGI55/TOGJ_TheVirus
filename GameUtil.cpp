@@ -4,6 +4,7 @@
 
 #include "GameUtil.h"
 #include <algorithm>
+#include <iostream>
 #include <random>
 
 namespace GameUtil {
@@ -11,11 +12,27 @@ namespace GameUtil {
     nlohmann::json LoadJson(const std::string& filename) {
         std::ifstream file(filename);
         if (!file.is_open()) {
-            throw std::runtime_error("Failed to open file");
+            std::cerr << "Failed to open file: " << filename << std::endl;
+            throw std::runtime_error("Failed to open file: " + filename);
         }
-        nlohmann::json data;
-        file >> data;
-        return data;
+
+        try {
+            nlohmann::json data;
+            file >> data;
+
+            // Debug output
+            std::cerr << "Successfully loaded JSON from: " << filename << std::endl;
+            std::cerr << "JSON structure: ";
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                std::cerr << it.key() << " ";
+            }
+            std::cerr << std::endl;
+
+            return data;
+        } catch (const nlohmann::json::parse_error& e) {
+            std::cerr << "JSON parse error in file " << filename << ": " << e.what() << std::endl;
+            throw;
+        }
     }
 
     //

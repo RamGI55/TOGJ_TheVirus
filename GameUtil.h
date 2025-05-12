@@ -19,6 +19,8 @@ namespace GameUtil {
 
     std::vector<std::string> Split(const std::string& s, char delim);
     std::string ToLower(const std::string& s);
+
+
 }
 
 #endif //UTILS_H

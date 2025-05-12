@@ -11,6 +11,15 @@
 #include "GameUtil.h"
 #include "locations.h"
 #include "virus.h"
+#include "map.h"
+#include "mainmenu.h"
+#include "GameState.h"
+
+#include <algorithm>
+#include <iostream>
+#include <fstream>
+#include <thread>
+#include <chrono>
 
 
 game::game() :running(false), Ui(nullptr)  {
@@ -21,7 +30,6 @@ void game::Initialise() {
 
     // Create UI
     Ui = std::make_shared<ui>();
-
     Ui->Initialise(this);
 
     // Load all data from JSON files
@@ -114,6 +122,10 @@ void game::SpawnViruses() {
 
 }
 
+
+void game::SetState(GameStateNS::GameState state) {
+}
+
 void game::MovePlayer(int dx, int dy) {
     if (Player && Player -> GetCurrentDungeon()) {
         // Try to move the player
@@ -187,8 +199,6 @@ void game::ProcessvirusMovement() {
             }
         }
     }
-
-
 }
 
 void game::ExitDungeon(bool completed) {
@@ -396,46 +406,89 @@ void game::LoadDataFromJson() {
 }
 
 void game::LoadBoroughsFromJson(const std::string &filename) {
-    nlohmann::json data = GameUtil::LoadJson(filename);
+    try {
+        nlohmann::json data = GameUtil::LoadJson(filename);
+        // Check if the "boroughs" key exists
+        if (!data.contains("boroughs")) {
+            Ui->AddMessage("Error: 'boroughs' key not found in " + filename);
+            return;
+        }
 
-    for (const auto& boroughJson : data["boroughs"]) {
-        std::string name = boroughJson["name"];
-        auto borough = std::make_shared<class borough>(name);
+        if (!data["boroughs"].is_array()) {
+            Ui->AddMessage("Error: 'boroughs' is not an array in " + filename);
+            return;
+        }
+        for (const auto& boroughJson : data["boroughs"]) {
+            if (!boroughJson.contains("name")) {
+                continue;
+            }
+            std::string name = boroughJson["name"];
+            auto borough = std::make_shared<class borough>(name);
 
-        // Store in map with lowercase key for case-insensitive lookup
-        Boroughs[GameUtil::ToLower(name)] = borough;
+            // Store in map with lowercase key for case-insensitive lookup
+            Boroughs[GameUtil::ToLower(name)] = borough;
 
-        Ui->AddMessage("Loaded borough: " + name);
+            Ui->AddMessage("Loaded borough: " + name);
+        }
+
+        if (Boroughs.empty()) {
+            Ui->AddMessage("Warning: No boroughs loaded from " + filename);
+        }
+    }
+    catch (const std::exception& e) {
+        Ui->AddMessage("Error loading boroughs: " + std::string(e.what()));
     }
 }
 
 void game::LoadLocationsFromJson(const std::string &filename) {
-    nlohmann::json data = GameUtil::LoadJson(filename);
+    try {
+        nlohmann::json data = GameUtil::LoadJson(filename);
 
-    for (const auto& locationJson : data["locations"]) {
-        std::string id = locationJson["id"];
-        std::string name = locationJson["name"];
-        std::string description = locationJson["description"];
-        std::string boroughName = locationJson["borough"];
-        float baseInfectionRate = locationJson.value("baseInfectionRate", 0.3f);
-
-        // Find the borough to add this location to
-        auto boroughIt = Boroughs.find(GameUtil::ToLower(boroughName));
-        if (boroughIt != Boroughs.end()) {
-            // Create and add the location
-            auto location = std::make_shared<locations>(id, name, description);
-            location->SetBaseInfectionRate(baseInfectionRate);
-
-            // Set dungeon parameters if present
-            if (locationJson.contains("dungeonWidth") && locationJson.contains("dungeonHeight")) {
-                int dungeonWidth = locationJson["dungeonWidth"];
-                int dungeonHeight = locationJson["dungeonHeight"];
-                // These would be stored for when we generate the dungeon
-            }
-
-            boroughIt->second->AddLocation(location);
-            Ui->AddMessage("Loaded location: " + name + " in " + boroughName);
+        // Check if the "locations" key exists
+        if (!data.contains("locations")) {
+            Ui->AddMessage("Error: 'locations' key not found in " + filename);
+            return;
         }
+
+        if (!data["locations"].is_array()) {
+            Ui->AddMessage("Error: 'locations' is not an array in " + filename);
+            return;
+        }
+        for (const auto& locationJson : data["locations"]) {
+            if (!locationJson.contains("id") || !locationJson.contains("name") ||
+                !locationJson.contains("description") || !locationJson.contains("borough")) {
+                Ui->AddMessage("Warning: Location with missing required fields, skipping");
+            }
+            std::string id = locationJson["id"];
+            std::string name = locationJson["name"];
+            std::string description = locationJson["description"];
+            std::string boroughName = locationJson["borough"];
+            float baseInfectionRate = locationJson.value("baseInfectionRate", 0.3f);
+
+            auto boroughIt = Boroughs.find(GameUtil::ToLower(boroughName));
+            if (boroughIt != Boroughs.end()) {
+                // Create and add the location
+                auto location = std::make_shared<locations>(id, name, description);
+                location->SetBaseInfectionRate(baseInfectionRate);
+
+                // Set dungeon parameters if present
+                if (locationJson.contains("dungeonWidth") && locationJson.contains("dungeonHeight")) {
+                    int dungeonWidth = locationJson["dungeonWidth"];
+                    int dungeonHeight = locationJson["dungeonHeight"];
+                    int initialViruses = locationJson.value("initialViruses", 5);
+                    int initialItems = locationJson.value("initialItems", 3);
+
+                    location->SetDungeonParameters(dungeonWidth, dungeonHeight, initialViruses, initialItems);
+                }
+
+                boroughIt->second->AddLocation(location);
+                Ui->AddMessage("Loaded location: " + name + " in " + boroughName);
+            } else {
+                Ui->AddMessage("Warning: Borough '" + boroughName + "' not found for location '" + name + "'");
+            }
+        }
+    }   catch (const std::exception& e) {
+        Ui->AddMessage("Error loading locations: " + std::string(e.what()));
     }
 }
 
@@ -567,6 +620,56 @@ void game::EnterLocation(const std::string &locationId) {
 
             // Set the player's current dungeon
             Player->SetCurrentDungeon(location->GetDungeon());
+
+            // Inform the player they've entered the dungeon
+            Ui->AddMessage("You've entered the dungeon at " + location->GetName() + ".");
+            Ui->AddMessage("Use arrow keys to move. Watch out for viruses!");
+
+            return;
+        }
+    }
+
+    // If we get here, the location wasn't found
+    Ui->AddMessage("Cannot find location: " + locationId);
+}
+
+void game::EnterDungeon(const std::string &locationId) {
+    // Check if player is in a borough
+    auto currentBorough = Player->GetCurrentBorough();
+    if (!currentBorough) {
+        Ui->AddMessage("You must enter a borough first.");
+        return;
+    }
+
+    // Get available locations in this borough
+    const auto& locationsVector = currentBorough->GetLocations();
+
+    // Find the location with matching ID
+    for (int i = 0; i < locationsVector.size(); i++) {
+        const auto& locationPtr = locationsVector[i];
+
+        if (locationPtr->GetId() == locationId) {
+            // Found the location
+            Ui->AddMessage("You've entered " + locationPtr->GetName() + ".");
+            Ui->AddMessage(locationPtr->GetDescription());
+
+            // Get the location pointer from the borough
+            auto location = currentBorough->GetLocation(i);
+
+            // Store current location
+            currentLocation = location;
+
+            // Generate a new dungeon for this location
+            location->GenerateDungeon();
+
+            // Populate the dungeon with items and viruses
+            PopulateDungeon(location->GetDungeon());
+
+            // Set the player's current dungeon
+            Player->SetCurrentDungeon(location->GetDungeon());
+
+            // Set UI state to DUNGEON
+            Ui->SetState(GameState::DUNGEON);
 
             // Inform the player they've entered the dungeon
             Ui->AddMessage("You've entered the dungeon at " + location->GetName() + ".");

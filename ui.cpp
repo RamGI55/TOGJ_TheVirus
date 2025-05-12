@@ -3,13 +3,14 @@
 //
 
 #include "ui.h"
-
 #include "borough.h"
 #include "dungeon.h"
 #include "game.h"
 #include "GameUtil.h"
+#include "map.h"
 #include "player.h"
 #include "virus.h"
+#include "mainmenu.h"
 
 using namespace ftxui;
 
@@ -52,7 +53,35 @@ ftxui::Element ui::RenderDungeon(const dungeon &dungeon) {
 
 }
 
-ui::ui()  {
+void ui::SetState(GameState state) {
+    currentState = state;
+
+    switch (state) {
+        case GameState::MENU:
+            mainMenu->Show();
+            break;
+
+        case GameState::PLAYING:
+            mainMenu->Hide();
+            if (CurrentVirus) {
+                CurrentVirus = nullptr; // End battle if there was one
+            }
+            break;
+
+        case GameState::DUNGEON:
+            mainMenu->Hide();
+            if (CurrentVirus) {
+                CurrentVirus = nullptr; // End battle if there was one
+            }
+            break;
+
+        case GameState::BATTLE:
+            mainMenu->Hide();
+            break;
+    }
+}
+
+ui::ui() : mainMenu(std::make_shared<mainmenu>()), gameMap(std::make_shared<map>()) {
 
 }
 
@@ -75,7 +104,18 @@ void ui::Initialise(game* gameptr) {
 
     MainContainer = Container::Vertical({});
 
-    // initialise the input component
+
+    // Initialize map and menu
+    gameMap->LoadFromJson("data/boroughs.json", "data/locations.json");
+
+    // Initialize main menu with callbacks
+    mainMenu->Initialize(GameInstance, gameMap);
+    mainMenu->SetOnStartGame([this]() { this->StartGame(); });
+    mainMenu->SetOnAddMessage([this](const std::string& msg) { this->AddMessage(msg); });
+
+    AddMessage("Type 'help' for commands or 'start' to begin the game");
+
+    // Initialize the input component
     InputComponent = Input(&InputBuffer, "Command : ");
 
     // Create the renderer with proper captures
@@ -83,9 +123,29 @@ void ui::Initialise(game* gameptr) {
         Elements elements;
         elements.push_back(RenderStatus());
 
-        if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
-            elements.push_back(RenderDungeonView());
+        elements.push_back(RenderMessages());
+
+        switch (currentState) {
+            case GameState::MENU:
+                elements.push_back(mainMenu->Render());
+                break;
+
+            case GameState::PLAYING:
+                elements.push_back(gameMap->Render());
+                break;
+
+            case GameState::DUNGEON:
+                if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
+                    elements.push_back(RenderDungeonView());
+                }
+                break;
+
+            case GameState::BATTLE:
+                // Battle UI would go here
+                elements.push_back(text("Battle in progress..."));
+                break;
         }
+
         elements.push_back(
             hbox({
             text("> "), InputComponent->Render()})
@@ -115,6 +175,15 @@ void ui::Initialise(game* gameptr) {
         // Handle enter key for command input
         if (event == Event::Return) {
             if (!InputBuffer.empty()) {
+                if (currentState == GameState::MENU) {
+                    if (mainMenu->HandleCommand(InputBuffer)) {
+
+                        InputBuffer.clear();
+                        return true;
+                    }
+                }
+
+                // Otherwise process as normal
                 ProcessCommand(InputBuffer);
                 InputBuffer.clear();
                 return true;
@@ -124,11 +193,6 @@ void ui::Initialise(game* gameptr) {
     });
 
     MainContainer |= EventHandler;
-    /*MainContainer = Container::Vertical({
-    Renderer(MainContainer, [&]() {
-        return renderer->Render();
-        })
-    });*/
     MainContainer = Container::Vertical({renderer});
 }
 
@@ -156,6 +220,56 @@ void ui::AddMessage(const std::string &message) {
 }
 
 void ui::ProcessCommand(const std::string &command) {
+    if (currentState == GameState::MENU) {
+        if (mainMenu->HandleCommand(command)) {
+            return;
+        }
+    }
+    // Process common commands across all states
+    std::string lcCommand = GameUtil::ToLower(command);
+
+    if (lcCommand == "help") {
+        // Show appropriate help based on state
+        switch (currentState) {
+            case GameState::MENU:
+                // Menu help handled by mainMenu
+                break;
+
+            case GameState::PLAYING:
+                AddMessage("Available commands:");
+                AddMessage("  enter <location> - Enter a location (e.g., 'enter tower')");
+                AddMessage("  look - Look around your current location");
+                AddMessage("  inventory - Check your items");
+                AddMessage("  menu - Return to main menu");
+                AddMessage("  quit - Exit the game");
+                break;
+
+            case GameState::DUNGEON:
+                AddMessage("Available commands:");
+                AddMessage("  Use arrow keys to move in the dungeon");
+                AddMessage("  look - Look around your current position");
+                AddMessage("  inventory - Check your items");
+                AddMessage("  use <item> - Use an item from your inventory");
+                AddMessage("  exit - Leave the dungeon");
+                AddMessage("  quit - Exit the game");
+                break;
+
+            case GameState::BATTLE:
+                AddMessage("Battle commands:");
+                AddMessage("  attack - Attack the virus");
+                AddMessage("  use <item> - Use an item from your inventory");
+                AddMessage("  flee - Try to escape from the battle");
+                break;
+        }
+        return;
+    }
+
+    if (lcCommand == "menu" && currentState != GameState::MENU && currentState != GameState::BATTLE) {
+        SetState(GameState::MENU);
+        return;
+    }
+
+    // Pass other commands to the game instance
     if (GameInstance) {
         GameInstance->ProcessInput(command);
     }
@@ -167,7 +281,7 @@ ftxui::Element ui::RenderMessages() const {
         message_elements.push_back(text(message));
     }
 
-    return window(text("Messages"), vbox(message_elements)) | size(HEIGHT, LESS_THAN, 10);
+    return window(text("Messages"), vbox(message_elements)) | size(HEIGHT, LESS_THAN, 8);
 }
 
 ftxui::Element ui::RenderStatus() const {
@@ -251,8 +365,14 @@ ftxui::Element ui::RenderDungeonView() {
     return window(text("Dungeon"), canvas(c));
 }
 
+void ui::StartGame() {
+    SetState(GameState::PLAYING);
+    AddMessage("You are in Old Toronto, find the ground zero virus outbreak and clensing it");
+    AddMessage("Type 'help' for available commands.");
+}
+
 void ui::StartBattle(std::shared_ptr<virus> enemy) {
-    inBattle = true;
+    SetState(GameState::BATTLE);
     CurrentVirus = enemy;
 
     AddMessage("Battle started with " + enemy->GetName() + "!");
@@ -260,9 +380,13 @@ void ui::StartBattle(std::shared_ptr<virus> enemy) {
 }
 
 void ui::EndBattle() {
-    inBattle = false;
-    CurrentVirus = nullptr;
+    if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
+        SetState(GameState::DUNGEON);
+    } else {
+        SetState(GameState::PLAYING);
+    }
 
+    CurrentVirus = nullptr;
     AddMessage("Battle ended!");
 }
 

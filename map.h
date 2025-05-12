@@ -17,13 +17,14 @@
 #include <nlohmann/json.hpp>
 
 using namespace ftxui;
-struct borough{
+
+struct MapBorough{
     float x, y;
     std::string name;
     std::string color;
     std::string stage;
 
-    borough(const nlohmann::json& j) {
+    MapBorough(const nlohmann::json& j) {
         x = j["x"];
         y = j["y"];
         name = j["name"];
@@ -31,10 +32,48 @@ struct borough{
 
     }
 };
-
+struct MapLocation {
+    std::string id;
+    std::string name;
+    std::string description;
+    float x, y;
+    Color color;
+    bool highlighted = false;
+};
 
 class map {
+private:
+    std::vector<MapBorough> boroughs;
+    std::vector<MapLocation> locations;
+    std::string selectedLocation;
+    bool showLegend = true;
 
+public:
+    map();
+    ~map() = default;
+
+    // Initialization
+    void LoadFromJson(const std::string& boroughsFile, const std::string& locationsFile);
+
+    // Rendering
+    ftxui::Element Render() const;
+    ftxui::Element RenderLegend() const;
+    ftxui::Element LocationDot(const std::string& name, Color c, bool highlighted) const;
+
+    // Location management
+    void HighlightLocation(const std::string& locationId);
+    void ClearHighlights();
+    const std::vector<MapLocation>& GetLocations() const { return locations; }
+    MapLocation* GetLocation(const std::string& locationId);
+
+    // Options
+    void SetShowLegend(bool show) { showLegend = show; }
+    bool IsShowingLegend() const { return showLegend; }
+
+private:
+    // Helper methods
+    void InitializeDefaultLocations();
+    Color GetColorFromString(const std::string& colorName) const;
 
 };
 

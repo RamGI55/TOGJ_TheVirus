@@ -20,6 +20,10 @@ namespace GameUtil {
     std::vector<std::string> Split(const std::string& s, char delim);
     std::string ToLower(const std::string& s);
 
+    bool FileExists(const std::string& filename);
+
+    bool ContainsIngnoreCase(const std::string& haystack, const std::string& needle);
+
 
 }
 

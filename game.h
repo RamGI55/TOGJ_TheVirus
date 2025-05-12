@@ -81,6 +81,8 @@ private:
 
     void InitialisePlayerItems();
 
+    void TestJsonLoading();
+
     std::shared_ptr<virus> CreateVirusFromType(const std::string& virusId);
     std::shared_ptr<items> CreateItemFromType(const std::string& itemId);
     std::shared_ptr<locations> currentLocation;
@@ -93,7 +95,6 @@ private:
     void CheckGameEndConditions();
     void AreAllBoroughsInfected() const;
     bool AreAllVirusCleaned() const;
-
 
 };
 

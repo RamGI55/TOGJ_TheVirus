@@ -14,12 +14,16 @@
 #include "map.h"
 #include "mainmenu.h"
 #include "GameState.h"
+#include "GameUtil.h"
 
 #include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <thread>
 #include <chrono>
+#include <filesystem>     // For file operations
+#include <stdexcept>      // For exception handling
+#include <sstream>        // For string stream operations
 
 
 game::game() :running(false), Ui(nullptr)  {
@@ -27,6 +31,7 @@ game::game() :running(false), Ui(nullptr)  {
 
 void game::Initialise() {
     running = true;
+    currentState = GameStateNS::GameState::MENU;
 
     // Create UI
     Ui = std::make_shared<ui>();
@@ -51,6 +56,8 @@ void game::Initialise() {
     Ui->AddMessage("Press Start to Start the Game");
     Ui->AddMessage("Type 'help' for commands");
     Ui->Run();
+
+    TestJsonLoading();
 }
 
 void game::Run() {
@@ -392,6 +399,50 @@ void game::HandleCollision(int x, int y) {
 }
 
 void game::LoadDataFromJson() {
+    // 1. First ensure default files exist
+    try {
+        Ui->AddMessage("Ensuring default files exist...");
+    } catch (const std::exception& e) {
+        Ui->AddMessage("Error ensuring default files: " + std::string(e.what()));
+        // Continue anyway
+    }
+
+    // 2. Create a default borough in case loading fails
+    if (Boroughs.empty()) {
+        auto defaultBorough = std::make_shared<class borough>("Old Toronto");
+        Boroughs["oldtoronto"] = defaultBorough;
+        Ui->AddMessage("Created default borough");
+    }
+
+    // 3. Try to load boroughs, but don't stop if it fails
+    try {
+        Ui->AddMessage("Loading boroughs...");
+        LoadBoroughsFromJson("data/boroughs.json");
+        Ui->AddMessage("Boroughs loaded successfully");
+    } catch (const std::exception& e) {
+        Ui->AddMessage("*** BOROUGH LOADING ERROR: " + std::string(e.what()));
+        // Fall back to default borough already created
+    }
+
+    // 4. Debug which boroughs we have
+    Ui->AddMessage("Current boroughs:");
+    for (const auto& [key, value] : Boroughs) {
+        if (value) {
+            Ui->AddMessage("  - " + key + ": " + value->GetName());
+        } else {
+            Ui->AddMessage("  - " + key + ": NULL POINTER");
+        }
+    }
+
+    // 5. Try to load locations, but don't stop if it fails
+    try {
+        Ui->AddMessage("Loading locations...");
+        LoadLocationsFromJson("data/locations.json");
+        Ui->AddMessage("Locations loaded successfully");
+    } catch (const std::exception& e) {
+        Ui->AddMessage("*** LOCATION LOADING ERROR: " + std::string(e.what()));
+    }
+
     try {
         LoadBoroughsFromJson("data/boroughs.json");
         LoadLocationsFromJson("data/locations.json");
@@ -403,6 +454,26 @@ void game::LoadDataFromJson() {
         Ui->AddMessage("Error loading game data: " + std::string(e.what()));
         // Continue with defaults if possible
     }
+
+    // Load viruses
+    try {
+        Ui->AddMessage("Loading viruses...");
+        LoadVirusesFromJson("data/viruses.json");
+        Ui->AddMessage("Viruses loaded successfully");
+    } catch (const std::exception& e) {
+        Ui->AddMessage("*** VIRUS LOADING ERROR: " + std::string(e.what()));
+    }
+
+    // Load items
+    try {
+        Ui->AddMessage("Loading items...");
+        LoadItemsFromJson("data/items.json");
+        Ui->AddMessage("Items loaded successfully");
+    } catch (const std::exception& e) {
+        Ui->AddMessage("*** ITEM LOADING ERROR: " + std::string(e.what()));
+    }
+
+    Ui->AddMessage("Game data loading complete");
 }
 
 void game::LoadBoroughsFromJson(const std::string &filename) {
@@ -554,6 +625,71 @@ void game::InitialisePlayerItems() {
         if (Items.find("actionpotion") != Items.end()) {
             Player->AddItem(Items["actionpotion"]);
         }
+    }
+}
+
+void game::TestJsonLoading() {
+    Ui->AddMessage("=== TESTING JSON LOADING ===");
+
+    try {
+        // Read the file manually
+        std::ifstream file("data/boroughs.json");
+        if (!file.is_open()) {
+            Ui->AddMessage("Failed to open file directly");
+            return;
+        }
+
+        std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        file.close();
+
+        Ui->AddMessage("File content length: " + std::to_string(content.length()));
+        Ui->AddMessage("First 50 chars: " + content.substr(0, std::min(size_t(50), content.length())));
+
+        // Parse the JSON
+        nlohmann::json data = nlohmann::json::parse(content);
+
+        // Check what we have
+        Ui->AddMessage("Top level keys:");
+        for (auto it = data.begin(); it != data.end(); ++it) {
+            Ui->AddMessage("  - " + it.key());
+        }
+
+        // Check for boroughs key
+        if (data.contains("boroughs")) {
+            Ui->AddMessage("Found 'boroughs' key");
+
+            // Check if it's an array
+            if (data["boroughs"].is_array()) {
+                Ui->AddMessage("'boroughs' is an array with " + std::to_string(data["boroughs"].size()) + " elements");
+
+                // Try to access each element
+                int index = 0;
+                for (const auto& item : data["boroughs"]) {
+                    Ui->AddMessage("Borough " + std::to_string(index++) + ":");
+
+                    // Check each key
+                    if (item.contains("name")) {
+                        Ui->AddMessage("  - has name: " + item["name"].get<std::string>());
+                    } else {
+                        Ui->AddMessage("  - no name key");
+                    }
+
+                    if (item.contains("description")) {
+                        Ui->AddMessage("  - has description: " + item["description"].get<std::string>());
+                    } else {
+                        Ui->AddMessage("  - no description key");
+                    }
+                }
+            } else {
+                Ui->AddMessage("'boroughs' is NOT an array");
+            }
+        } else {
+            Ui->AddMessage("NO 'boroughs' key found");
+        }
+
+        Ui->AddMessage("JSON test completed successfully");
+    } catch (const std::exception& e) {
+        Ui->AddMessage("*** TEST ERROR: " + std::string(e.what()));
     }
 }
 

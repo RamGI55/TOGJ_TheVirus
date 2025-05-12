@@ -4,6 +4,7 @@
 
 #ifndef LOCATIONS_H
 #define LOCATIONS_H
+
 #include <string>
 #include <map>
 #include <vector>
@@ -16,6 +17,7 @@
 class dungeon;
 class virus;
 class items;
+
 class locations {
 
     std::string id;
@@ -25,6 +27,8 @@ class locations {
     float infectionrate;
     bool isInfected;
     std::shared_ptr<dungeon> CurrentDungeon;
+
+    // Dungeon parameters
     int dungeonWidth = 20;      // Default values
     int dungeonHeight = 20;
     int dungeonInitialViruses = 5;

@@ -200,6 +200,7 @@ void ui::Run() {
     // Create a screen and store it as a member
     if (screen == nullptr) {
         screen = new ftxui::ScreenInteractive(ftxui::ScreenInteractive::TerminalOutput());
+        screen->TrackMouse(true);  // Explicitly enable mouse support
     }
 
     // Run the main loop with proper error handling

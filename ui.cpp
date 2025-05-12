@@ -102,10 +102,11 @@ ui::~ui() {
 void ui::Initialise(game* gameptr) {
     GameInstance = gameptr;
 
-    MainContainer = Container::Vertical({});
+    // Initialize map and menu first
+    gameMap = std::make_shared<map>();
+    mainMenu = std::make_shared<mainmenu>();
 
-
-    // Initialize map and menu
+    // Load map data
     gameMap->LoadFromJson("data/boroughs.json", "data/locations.json");
 
     // Initialize main menu with callbacks
@@ -113,97 +114,30 @@ void ui::Initialise(game* gameptr) {
     mainMenu->SetOnStartGame([this]() { this->StartGame(); });
     mainMenu->SetOnAddMessage([this](const std::string& msg) { this->AddMessage(msg); });
 
-    AddMessage("Type 'help' for commands or 'start' to begin the game");
-
     // Initialize the input component
-    InputComponent = Input(&InputBuffer, "Command : ");
+    InputBuffer = "";
+    InputComponent = Input(&InputBuffer, "Command: ");
 
-    // Create the renderer with proper captures
-    auto renderer = Renderer([this] {
-        Elements elements;
-        elements.push_back(RenderStatus());
+    // Initial state is MENU
+    currentState = GameState::MENU;
 
-        elements.push_back(RenderMessages());
+    // Create initial container structure
+    UpdateMainContainer();
 
-        switch (currentState) {
-            case GameState::MENU:
-                elements.push_back(mainMenu->Render());
-                break;
-
-            case GameState::PLAYING:
-                elements.push_back(gameMap->Render());
-                break;
-
-            case GameState::DUNGEON:
-                if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
-                    elements.push_back(RenderDungeonView());
-                }
-                break;
-
-            case GameState::BATTLE:
-                // Battle UI would go here
-                elements.push_back(text("Battle in progress..."));
-                break;
-        }
-
-        elements.push_back(
-            hbox({
-            text("> "), InputComponent->Render()})
-            );
-        return vbox(elements);
-    });
-
-    auto EventHandler = CatchEvent([this](Event event) {
-        if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
-            if (event == Event::ArrowUp) {
-                GameInstance->MovePlayer(0, -1);
-                return true;
-            }
-            if (event == Event::ArrowDown) {
-                GameInstance->MovePlayer(0, 1);
-                return true;
-            }
-            if (event == Event::ArrowLeft) {
-                GameInstance->MovePlayer(-1, 0);
-                return true;
-            }
-            if (event == Event::ArrowRight) {
-                GameInstance->MovePlayer(1, 0);
-                return true;
-            }
-        }
-        // Handle enter key for command input
-        if (event == Event::Return) {
-            if (!InputBuffer.empty()) {
-                if (currentState == GameState::MENU) {
-                    if (mainMenu->HandleCommand(InputBuffer)) {
-
-                        InputBuffer.clear();
-                        return true;
-                    }
-                }
-
-                // Otherwise process as normal
-                ProcessCommand(InputBuffer);
-                InputBuffer.clear();
-                return true;
-            }
-        }
-        return false;
-    });
-
-    MainContainer |= EventHandler;
-    MainContainer = Container::Vertical({renderer});
+    // Add initial message
+    AddMessage("Type 'help' for commands or 'start' to begin the game");
 }
 
 void ui::Run() {
-    // Create a screen and store it as a member
+    // Create a screen with proper mouse support
     if (screen == nullptr) {
-        screen = new ftxui::ScreenInteractive(ftxui::ScreenInteractive::TerminalOutput());
+        auto screen_options = ftxui::ScreenInteractive::TerminalOutput();
+        screen_options.TrackMouse(true);  // Explicitly enable mouse support
     }
 
     // Run the main loop with proper error handling
     try {
+        // Make sure the container includes all necessary components before looping
         screen->Loop(MainContainer);
     } catch (const std::exception& e) {
         std::cerr << "Exception in UI loop: " << e.what() << std::endl;
@@ -453,4 +387,106 @@ std::string ui::GetInput() {
     screen.Loop(modal_renderer);
 
     return result;
+}
+
+void ui::UpdateMainContainer() {
+    // Get menu components to handle directly
+    Component menuComponents = mainMenu->GetMenuContainer();
+
+    // Rebuild the main container based on current state
+    if (currentState == GameState::MENU) {
+        auto renderer = Renderer([this] {
+            Elements elements;
+            elements.push_back(RenderMessages());
+            elements.push_back(mainMenu->Render());
+            return vbox(elements);
+        });
+
+        MainContainer = Container::Vertical({
+            menuComponents,
+            renderer
+        });
+    } else {
+        auto renderer = Renderer([this] {
+            Elements elements;
+            elements.push_back(RenderStatus());
+            elements.push_back(RenderMessages());
+
+            switch (currentState) {
+                case GameState::PLAYING:
+                    elements.push_back(gameMap->Render());
+                    break;
+
+                case GameState::DUNGEON:
+                    if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
+                        elements.push_back(RenderDungeonView());
+                    }
+                    break;
+
+                case GameState::BATTLE:
+                    elements.push_back(text("Battle in progress..."));
+                    break;
+
+                default:
+                    break;
+            }
+
+            elements.push_back(
+                hbox({
+                    text("> "), InputComponent->Render()
+                })
+            );
+
+            return vbox(elements);
+        });
+
+        MainContainer = Container::Vertical({
+            renderer
+        });
+    }
+
+    // Add event handling for keyboard and mouse
+    MainContainer |= CatchEvent([this](Event event) {
+        // Handle mouse events
+        if (event.is_mouse()) {
+            // Let mouse events propagate to child components
+            return false;
+        }
+
+        // When in menu, pass events to the menu component first
+        if (currentState == GameState::MENU && mainMenu->HandleInput(event)) {
+            return true;
+        }
+
+        // Handle dungeon movement
+        if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
+            if (event == Event::ArrowUp) {
+                GameInstance->MovePlayer(0, -1);
+                return true;
+            }
+            if (event == Event::ArrowDown) {
+                GameInstance->MovePlayer(0, 1);
+                return true;
+            }
+            if (event == Event::ArrowLeft) {
+                GameInstance->MovePlayer(-1, 0);
+                return true;
+            }
+            if (event == Event::ArrowRight) {
+                GameInstance->MovePlayer(1, 0);
+                return true;
+            }
+        }
+
+        // Handle enter key for command input (only when not in menu)
+        if (currentState != GameState::MENU && event == Event::Return) {
+            if (!InputBuffer.empty()) {
+                ProcessCommand(InputBuffer);
+                InputBuffer.clear();
+                return true;
+            }
+        }
+
+        return false;
+    });
 }

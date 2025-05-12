@@ -24,7 +24,44 @@ void mainmenu::Initialize(game *gamePtr, std::shared_ptr<map> mapPtr) {
     if (!onStartGame) {
         onStartGame = [] {};
     }
+
+    // Create buttons with proper styling and callbacks
+    auto buttonOption = ButtonOption();
+    buttonOption.Border();
+
+    // Create buttons with appropriate callbacks
+    startButton = Button("Start Game", [this]() {
+        this->StartGame();
+    });
+
+    helpButton = Button("Help", [this]() {
+        this->ShowHelp();
+    });
+
+    quitButton = Button("Quit", [this]() {
+        if (this->GameInstance) {
+            this->GameInstance->Quit();
+        }
+    });
+
+    // Create a container for the buttons
+    menuContainer = Container::Vertical({
+        startButton,
+        helpButton,
+        quitButton
+    });
+
+    // Enable mouse interaction for the menu container
+    menuContainer |= CatchEvent([this](Event event) {
+        // Handle mouse click events
+        if (event.is_mouse()) {
+            return false; // Return false to let the event propagate to the buttons
+        }
+        return false;
+    });
 }
+
+
 
 ftxui::Element mainmenu::Render() const {
     if (!menuActive) {
@@ -44,6 +81,8 @@ ftxui::Element mainmenu::Render() const {
         }) | bold | color(Color::Cyan)
     );
 
+
+    /*
     // Add menu items
     Elements items;
     for (size_t i = 0; i < menuItems.size(); i++) {
@@ -59,13 +98,15 @@ ftxui::Element mainmenu::Render() const {
 
         items.push_back(item);
     }
+    */
 
-    menuElements.push_back(window(text("Menu"), vbox(items)));
+    // Add menu container with buttons
+    menuElements.push_back(window(text("Menu"), menuContainer->Render()));
 
     // Add instructions
     menuElements.push_back(
         vbox({
-            text("Use arrow keys to navigate, Enter to select"),
+            text("Click a button or use arrow keys to navigate, Enter to select"),
             text("Or type a command: 'start', 'help', 'quit'")
         }) | color(Color::GrayLight)
     );
@@ -88,8 +129,14 @@ bool mainmenu::HandleInput(ftxui::Event event) {
         selectedItem = std::min(static_cast<int>(menuItems.size() - 1), selectedItem + 1);
         return true;
     }
-
     // Handle selection
+    if (event == Event::Return) {
+        return true;  // Let the button handle it
+    }
+
+    return false;
+
+    /*// Handle selection
     if (event == Event::Return) {
         switch (selectedItem) {
             case 0: // Start Game
@@ -107,7 +154,7 @@ bool mainmenu::HandleInput(ftxui::Event event) {
         return true;
     }
 
-    return false;
+    return false;*/
 }
 
 bool mainmenu::HandleCommand(const std::string &command) {

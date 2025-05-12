@@ -25,11 +25,12 @@ struct MapBorough{
     std::string stage;
 
     MapBorough(const nlohmann::json& j) {
-        x = j["x"];
-        y = j["y"];
-        name = j["name"];
-        color = j["color"];
-
+        // Use value() method with defaults for optional properties
+        x = j.value("x", 20.0f);  // Default x position
+        y = j.value("y", 10.0f);  // Default y position
+        name = j["name"];  // Name is required
+        color = j.value("color", "white");  // Default color
+        stage = j.value("stage", "normal");  // Default stage
     }
 };
 struct MapLocation {

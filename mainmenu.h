@@ -48,12 +48,21 @@ public:
     void Show() { menuActive = true; }
     void Hide() { menuActive = false; }
     bool IsActive() const { return menuActive; }
+    ftxui::Component GetMenuContainer() const {return menuContainer;}
 
 private:
     // Helper methods
     void ShowHelp();
     void StartGame();
     void ShowTitle() const;
+
+    // Button components
+    ftxui::Component startButton;
+    ftxui::Component helpButton;
+    ftxui::Component quitButton;
+    ftxui::Component menuContainer;
+
+
 };
 
 

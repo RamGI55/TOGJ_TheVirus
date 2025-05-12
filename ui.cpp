@@ -100,9 +100,15 @@ ui::~ui() {
 }
 
 void ui::Initialise(game* gameptr) {
-    GameInstance = gameptr;
 
-    MainContainer = Container::Vertical({});
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+
+    screen = new ftxui::ScreenInteractive(ftxui::ScreenInteractive::TerminalOutput());
+    screen->TrackMouse(true);
+    screen->PostEvent(Event::Custom);
+
+    GameInstance = gameptr;
 
 
     // Initialize map and menu
@@ -153,47 +159,6 @@ void ui::Initialise(game* gameptr) {
         return vbox(elements);
     });
 
-    /*auto EventHandler = CatchEvent([this](Event event) {
-        if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
-            if (event == Event::ArrowUp) {
-                GameInstance->MovePlayer(0, -1);
-                return true;
-            }
-            if (event == Event::ArrowDown) {
-                GameInstance->MovePlayer(0, 1);
-                return true;
-            }
-            if (event == Event::ArrowLeft) {
-                GameInstance->MovePlayer(-1, 0);
-                return true;
-            }
-            if (event == Event::ArrowRight) {
-                GameInstance->MovePlayer(1, 0);
-                return true;
-            }
-        }
-        // Handle enter key for command input
-        if (event == Event::Return) {
-            if (!InputBuffer.empty()) {
-                if (currentState == GameState::MENU) {
-                    if (mainMenu->HandleCommand(InputBuffer)) {
-
-                        InputBuffer.clear();
-                        return true;
-                    }
-                }
-
-                // Otherwise process as normal
-                ProcessCommand(InputBuffer);
-                InputBuffer.clear();
-                return true;
-            }
-        }
-        return false;
-    });
-
-    MainContainer |= EventHandler;
-    MainContainer = Container::Vertical({renderer});*/
     // Create main container first
     MainContainer = Container::Vertical({renderer});
 
@@ -235,7 +200,16 @@ void ui::Run() {
         screen->TrackMouse(true);  // Explicitly enable mouse support
     }
 
-    InputComponent->TakeFocus();
+    // Add this: ensure screen is refreshed regularly
+    auto refresh_timer = std::thread([this]() {
+        while (GameInstance && GameInstance->isRunning()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            screen->PostEvent(Event::Custom);
+        }
+    });
+    refresh_timer.detach(); // Let it run independently
+
+    //InputComponent->TakeFocus();
     // Run the main loop with proper error handling
     try {
         screen->Loop(MainContainer);

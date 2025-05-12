@@ -37,27 +37,33 @@ void game::Initialise() {
     Ui = std::make_shared<ui>();
     Ui->Initialise(this);
 
-    // Load all data from JSON files
-    LoadDataFromJson();
-
-    // Create player
-    Player = std::make_shared<player>("Virus Hunter");
-
-    // Initialize player with starting items
-    InitialisePlayerItems();
-
-    // Set up initial game state - player starts in the first borough
-    if (!Boroughs.empty()) {
-        Player->SetCurrentBorough(Boroughs.begin()->second);
+    // SKIP ALL JSON LOADING - use hardcoded data
+    try {
+        Ui->AddMessage("Creating game data...");
+        LoadDataFromJson();
+    }
+    catch (const std::exception& e) {
+        Ui->AddMessage("CRITICAL ERROR: " + std::string(e.what()));
     }
 
-    // Display welcome message
+    // Create player
+    try {
+        Ui->AddMessage("Creating player...");
+        Player = std::make_shared<player>("Virus Hunter");
+
+        // Set starting borough if available
+        if (!Boroughs.empty()) {
+            Player->SetCurrentBorough(Boroughs.begin()->second);
+        }
+    }
+    catch (const std::exception& e) {
+        Ui->AddMessage("ERROR creating player: " + std::string(e.what()));
+    }
+
+    // Show welcome message and start
     Ui->AddMessage("THE VIRUS");
-    Ui->AddMessage("Press Start to Start the Game");
     Ui->AddMessage("Type 'help' for commands");
     Ui->Run();
-
-    TestJsonLoading();
 }
 
 void game::Run() {
@@ -399,81 +405,44 @@ void game::HandleCollision(int x, int y) {
 }
 
 void game::LoadDataFromJson() {
-    // 1. First ensure default files exist
+    // Skip all JSON loading - just hardcode everything
+
+    Ui->AddMessage("Creating hardcoded game data...");
+
+    // Create Old Toronto borough
     try {
-        Ui->AddMessage("Ensuring default files exist...");
-    } catch (const std::exception& e) {
-        Ui->AddMessage("Error ensuring default files: " + std::string(e.what()));
-        // Continue anyway
+        auto oldToronto = new borough("Old Toronto");
+        Boroughs["oldtoronto"] = std::shared_ptr<borough>(oldToronto);
+
+        // Create locations for Old Toronto
+        auto cnTower = new locations("tower", "CN Tower", "Toronto's landmark tower");
+        auto harbourfront = new locations("harbour", "Harbourfront", "The waterfront area");
+        auto financial = new locations("financial", "Financial District", "Heart of finance");
+
+        // Add locations to borough
+        Boroughs["oldtoronto"]->AddLocation(std::shared_ptr<locations>(cnTower));
+        Boroughs["oldtoronto"]->AddLocation(std::shared_ptr<locations>(harbourfront));
+        Boroughs["oldtoronto"]->AddLocation(std::shared_ptr<locations>(financial));
+
+        // Create viruses
+        viruses["basic"] = std::shared_ptr<virus>(new virus(
+            "Common Virus", "A standard virus", 10, 2, 1, 1));
+
+        viruses["boss"] = std::shared_ptr<virus>(new virus(
+            "King of RACCON", "A dangerous Raccon", 30, 5, 3, 2));
+
+        // Create items
+        Items["healthkit"] = std::shared_ptr<items>(new items(
+            "Health Kit", "Restores health", 10, 0, 0));
+
+        Items["actionpotion"] = std::shared_ptr<items>(new items(
+            "Action Potion", "Restores action points", 0, 0, 0, 5));
+
+        Ui->AddMessage("Hardcoded data created successfully!");
     }
-
-    // 2. Create a default borough in case loading fails
-    if (Boroughs.empty()) {
-        auto defaultBorough = std::make_shared<class borough>("Old Toronto");
-        Boroughs["oldtoronto"] = defaultBorough;
-        Ui->AddMessage("Created default borough");
+    catch (const std::exception& e) {
+        Ui->AddMessage("ERROR creating data: " + std::string(e.what()));
     }
-
-    // 3. Try to load boroughs, but don't stop if it fails
-    try {
-        Ui->AddMessage("Loading boroughs...");
-        LoadBoroughsFromJson("data/boroughs.json");
-        Ui->AddMessage("Boroughs loaded successfully");
-    } catch (const std::exception& e) {
-        Ui->AddMessage("*** BOROUGH LOADING ERROR: " + std::string(e.what()));
-        // Fall back to default borough already created
-    }
-
-    // 4. Debug which boroughs we have
-    Ui->AddMessage("Current boroughs:");
-    for (const auto& [key, value] : Boroughs) {
-        if (value) {
-            Ui->AddMessage("  - " + key + ": " + value->GetName());
-        } else {
-            Ui->AddMessage("  - " + key + ": NULL POINTER");
-        }
-    }
-
-    // 5. Try to load locations, but don't stop if it fails
-    try {
-        Ui->AddMessage("Loading locations...");
-        LoadLocationsFromJson("data/locations.json");
-        Ui->AddMessage("Locations loaded successfully");
-    } catch (const std::exception& e) {
-        Ui->AddMessage("*** LOCATION LOADING ERROR: " + std::string(e.what()));
-    }
-
-    try {
-        LoadBoroughsFromJson("data/boroughs.json");
-        LoadLocationsFromJson("data/locations.json");
-        LoadVirusesFromJson("data/viruses.json");
-        LoadItemsFromJson("data/items.json");
-
-        Ui->AddMessage("Game data loaded successfully.");
-    } catch (const std::exception& e) {
-        Ui->AddMessage("Error loading game data: " + std::string(e.what()));
-        // Continue with defaults if possible
-    }
-
-    // Load viruses
-    try {
-        Ui->AddMessage("Loading viruses...");
-        LoadVirusesFromJson("data/viruses.json");
-        Ui->AddMessage("Viruses loaded successfully");
-    } catch (const std::exception& e) {
-        Ui->AddMessage("*** VIRUS LOADING ERROR: " + std::string(e.what()));
-    }
-
-    // Load items
-    try {
-        Ui->AddMessage("Loading items...");
-        LoadItemsFromJson("data/items.json");
-        Ui->AddMessage("Items loaded successfully");
-    } catch (const std::exception& e) {
-        Ui->AddMessage("*** ITEM LOADING ERROR: " + std::string(e.what()));
-    }
-
-    Ui->AddMessage("Game data loading complete");
 }
 
 void game::LoadBoroughsFromJson(const std::string &filename) {

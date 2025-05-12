@@ -103,13 +103,10 @@ void ui::Initialise(game* gameptr) {
 
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
+    GameInstance = gameptr;
 
     screen = new ftxui::ScreenInteractive(ftxui::ScreenInteractive::TerminalOutput());
     screen->TrackMouse(true);
-    screen->PostEvent(Event::Custom);
-
-    GameInstance = gameptr;
-
 
     // Initialize map and menu
     gameMap->LoadFromJson("data/boroughs.json", "data/locations.json");
@@ -164,42 +161,37 @@ void ui::Initialise(game* gameptr) {
 
     // Then add event handler that allows event propagation
     MainContainer |= CatchEvent([this](Event event) {
-        // Handle arrow key movement
-        if (GameInstance && GameInstance->GetPlayer() && GameInstance->GetPlayer()->GetCurrentDungeon()) {
-            if (event == Event::ArrowUp) {
-                GameInstance->MovePlayer(0, -1);
-                return true;
-            }
-            // ... other arrow keys
-        }
+           // Only handle specific events
+           if (event == Event::Return && !InputBuffer.empty()) {
+               std::string command = InputBuffer;
+               InputBuffer.clear();
+               ProcessCommand(command);
+               return true;
+           }
 
-        // Handle enter for commands but DON'T return true for mouse events
-        if (event == Event::Return && !InputBuffer.empty()) {
-            // Command processing logic
-            if (currentState == GameState::MENU) {
-                if (mainMenu->HandleCommand(InputBuffer)) {
-                    InputBuffer.clear();
-                    return true;
-                }
-            }
+           // Handle arrow keys only in dungeon mode
+           if (currentState == GameState::DUNGEON &&
+               GameInstance && GameInstance->GetPlayer() &&
+               GameInstance->GetPlayer()->GetCurrentDungeon()) {
+               if (event == Event::ArrowUp) {
+                   GameInstance->MovePlayer(0, -1);
+                   return true;
+               }
+               // Other arrow keys...
+           }
 
-            ProcessCommand(InputBuffer);
-            InputBuffer.clear();
-            return true;
-        }
-
-        // Critical: Don't consume other events
-        return false;
-    });
+           return false;  // Let other events propagate
+       });
 }
 
 void ui::Run() {
     // Create a screen and store it as a member
-    if (screen == nullptr) {
-        screen = new ftxui::ScreenInteractive(ftxui::ScreenInteractive::TerminalOutput());
-        screen->TrackMouse(true);  // Explicitly enable mouse support
+    if (!screen) {
+        std::cerr << "Error: Screen not initialized" << std::endl;
+        return;
     }
-
+    screen->TrackMouse(true);  // Explicitly enable mouse support
+    /*
     // Add this: ensure screen is refreshed regularly
     auto refresh_timer = std::thread([this]() {
         while (GameInstance && GameInstance->isRunning()) {
@@ -208,6 +200,7 @@ void ui::Run() {
         }
     });
     refresh_timer.detach(); // Let it run independently
+    */
 
     //InputComponent->TakeFocus();
     // Run the main loop with proper error handling
@@ -379,8 +372,12 @@ void ui::StartGame() {
     AddMessage("You are in Old Toronto, find the ground zero virus outbreak and cleansing it");
     AddMessage("Type 'help' for available commands.");
 
+    // Force a redraw
+    if (screen) {
+        screen->PostEvent(Event::Custom);
+    }
     // Add this line to force UI refresh
-    UpdateMainContainer();
+    //UpdateMainContainer();
 }
 
 void ui::StartBattle(std::shared_ptr<virus> enemy) {

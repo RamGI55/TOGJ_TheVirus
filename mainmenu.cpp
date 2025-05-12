@@ -31,16 +31,16 @@ void mainmenu::Initialize(game *gamePtr, std::shared_ptr<map> mapPtr) {
     buttonOption.Animated(); // Add animation to make clicks visible
 
     startButton = Button("Start Game", [this]() {
-        this->StartGame();
+        StartGame();
     }, buttonOption);
 
     helpButton = Button("Help", [this]() {
-        this->ShowHelp();
+        ShowHelp();
     }, buttonOption);
 
     quitButton = Button("Quit", [this]() {
-        if (this->GameInstance) {
-            this->GameInstance->Quit();
+        if (GameInstance) {
+            GameInstance->Quit();
         }
     }, buttonOption);
 

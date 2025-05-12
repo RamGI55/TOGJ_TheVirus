@@ -11,6 +11,7 @@
 #include "player.h"
 #include "virus.h"
 #include "mainmenu.h"
+#include <string>
 
 using namespace ftxui;
 
@@ -54,7 +55,32 @@ ftxui::Element ui::RenderDungeon(const dungeon &dungeon) {
 }
 
 void ui::SetState(GameState state) {
+    if (state == currentState) return; // No state change
+
     currentState = state;
+
+    switch (state) {
+        case GameState::MENU:
+            mainMenu->Show();
+            break;
+
+        case GameState::PLAYING:
+        case GameState::DUNGEON:
+            mainMenu->Hide();
+            if (CurrentVirus) {
+                CurrentVirus = nullptr; // End battle if active
+            }
+            break;
+
+        case GameState::BATTLE:
+            mainMenu->Hide();
+            break;
+    }
+
+    // Force UI refresh
+    UpdateMainContainer();
+
+    /*currentState = state;
 
     switch (state) {
         case GameState::MENU:
@@ -78,7 +104,7 @@ void ui::SetState(GameState state) {
         case GameState::BATTLE:
             mainMenu->Hide();
             break;
-    }
+    }*/
 }
 
 ui::ui() : mainMenu(std::make_shared<mainmenu>()), gameMap(std::make_shared<map>()) {
@@ -111,8 +137,23 @@ void ui::Initialise(game* gameptr) {
     // Initialize input component
     InputBuffer = "";  // Make sure this is empty
     InputComponent = Input(&InputBuffer, "Command: ");
+    InputComponent |= Renderer([](Element inner) {
+        return hbox({
+        text("> ") | color(Color::Green),
+        inner | bgcolor(Color::Black) //| color(Color::White)
+        });
+    });
 
-
+    InputComponent |= CatchEvent([this](Event e) {
+        if (e.is_character()) {
+        std::cerr << "Debug: Character entered: " << e.character() << std::endl;
+        std::cerr << "Debug: InputBuffer now contains: " << InputBuffer << std::endl;
+    }
+        if (!InputBuffer.empty()) {
+            std::cerr << "Debug: InputBuffer updated: " << InputBuffer << std::endl;
+        }
+        return false;
+    });
     // Initialize map and menu
     gameMap->LoadFromJson("data/boroughs.json", "data/locations.json");
 
@@ -128,7 +169,6 @@ void ui::Initialise(game* gameptr) {
     auto renderer = Renderer([this] {
         Elements elements;
         elements.push_back(RenderStatus());
-
         elements.push_back(RenderMessages());
 
         switch (currentState) {
@@ -154,16 +194,10 @@ void ui::Initialise(game* gameptr) {
 
         elements.push_back(
             hbox({
-            text("> "), InputComponent->Render()})
-            );
+            text("> "), InputComponent->Render()}));
         return vbox(elements);
     });
-    InputComponent |= Renderer([](Element inner) {
-    return hbox({
-        text("> ") | color(Color::Green),
-        inner | bgcolor(Color::Black) | color(Color::White)
-        });
-    });
+
 
     // Create main container first
     MainContainer = Container::Vertical({renderer});
@@ -177,21 +211,34 @@ void ui::Initialise(game* gameptr) {
 
                // Debug the command that's about to be processed
                 std::cerr << "Processing command: " << command << std::endl;
-
                // Process the command directly here
                 ProcessCommand(command);
                 return true;
+            } else {
+                AddMessage("Error: Input cannot be empty!");
+                std::cerr << "Debug: Return key pressed but InputBuffer is empty." << std::endl;
+                return false;
             }
-
+        }
            // Handle arrow keys only in dungeon mode
-            if (currentState == GameState::DUNGEON &&
-                GameInstance && GameInstance->GetPlayer() &&
-                GameInstance->GetPlayer()->GetCurrentDungeon()) {
-                if (event == Event::ArrowUp) {
-                    GameInstance->MovePlayer(0, -1);
-                    return true;
-                }
-               // Other arrow keys...
+        if (currentState == GameState::DUNGEON &&
+            GameInstance && GameInstance->GetPlayer() &&
+            GameInstance->GetPlayer()->GetCurrentDungeon()) {
+            if (event == Event::ArrowUp) {
+                GameInstance->MovePlayer(0, -1);
+                return true;
+            }
+            if (event == Event::ArrowDown) {
+            GameInstance->MovePlayer(0, 1);
+            return true;
+            }
+            if (event == Event::ArrowLeft) {
+                GameInstance->MovePlayer(-1, 0);
+                return true;
+            }
+            if (event == Event::ArrowRight) {
+                GameInstance->MovePlayer(1, 0);
+                return true;
             }
         }
         return false;  // Let other events propagate
@@ -432,13 +479,15 @@ std::string ui::GetInput() {
     // Add a prompt to the message log
     AddMessage("Enter your choice: ");
 
-    // Create a temporary input component
-    auto temp_input = Input(&result, "");
-
-    // Create a button to confirm input
+    auto temp_input = Input(&result, "Input here...");
     auto confirm_button = Button("Confirm", [&]() {
-        input_done = true;
+        if (result.empty()) {
+            AddMessage("Error: Input cannot be empty!");
+        } else {
+            input_done = true;
+        }
     });
+
 
     // Create a container for these components
     auto container = Container::Vertical({
@@ -449,8 +498,8 @@ std::string ui::GetInput() {
     // Setup a modal dialog
     auto screen = ScreenInteractive::TerminalOutput();
 
-    // Create an exit flag for the modal
-    bool modal_exit = false;
+    /*// Create an exit flag for the modal
+    bool modal_exit = false;*/
 
     // Set up a special renderer for the modal
     auto modal_renderer = Renderer(container, [&]() {
@@ -465,11 +514,6 @@ std::string ui::GetInput() {
     container |= CatchEvent([&](Event event) {
         if (event == Event::Return) {
             input_done = true;
-            modal_exit = true;
-            return true;
-        }
-        if (input_done) {
-            modal_exit = true;
             return true;
         }
         return false;
@@ -477,7 +521,6 @@ std::string ui::GetInput() {
 
     // Run the modal until input is done
     screen.Loop(modal_renderer);
-
     return result;
 }
 

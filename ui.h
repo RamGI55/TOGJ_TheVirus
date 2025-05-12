@@ -82,6 +82,8 @@ public:
     // input helpers
     std::string GetInputBlocking(const std::string& input);
     std::string GetInput();
+
+    void UpdateMainContainer();
 };
 
 

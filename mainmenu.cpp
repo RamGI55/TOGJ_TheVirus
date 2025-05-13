@@ -25,32 +25,6 @@ void mainmenu::Initialize(game *gamePtr, std::shared_ptr<map> mapPtr) {
         onStartGame = [] {};
     }
 
-    // Change to add button options:
-    auto buttonOption = ButtonOption();
-    buttonOption.Border();
-    buttonOption.Animated(); // Add animation to make clicks visible
-
-    startButton = Button("Start Game", [this]() {
-        StartGame();
-    }, buttonOption);
-
-    helpButton = Button("Help", [this]() {
-        ShowHelp();
-    }, buttonOption);
-
-    quitButton = Button("Quit", [this]() {
-        if (GameInstance) {
-            GameInstance->Quit();
-        }
-    }, buttonOption);
-
-    // Create a container for the buttons
-    menuContainer = Container::Vertical({
-        startButton,
-        helpButton,
-        quitButton
-    });
-
     // Enable mouse interaction for the menu container
     menuContainer |= CatchEvent([this](Event event) {
         // Handle mouse click events
@@ -67,20 +41,6 @@ ftxui::Element mainmenu::Render() const {
     if (!menuActive) {
         return ftxui::text("");  // Don't render if not active
     }
-
-    Elements menuElements;
-
-    // Add title
-    menuElements.push_back(
-        vbox({
-            text("╔═══════════════════════════════════════════╗"),
-            text("║              THE VIRUS                    ║"),
-            text("║       A Virus Cleansing Adventure         ║"),
-            text("║               TOJam Edition               ║"),
-            text("╚═══════════════════════════════════════════╝")
-        }) | bold | color(Color::Cyan)
-    );
-
 
     /*
     // Add menu items
@@ -100,7 +60,7 @@ ftxui::Element mainmenu::Render() const {
     }
     */
 
-    // Add menu container with buttons
+    /*// Add menu container with buttons
     menuElements.push_back(window(text("Menu"), menuContainer->Render()));
 
     // Add instructions
@@ -111,7 +71,7 @@ ftxui::Element mainmenu::Render() const {
         }) | color(Color::GrayLight)
     );
 
-    return vbox(menuElements);
+    return vbox(menuElements);*/
 }
 
 bool mainmenu::HandleInput(ftxui::Event event) {

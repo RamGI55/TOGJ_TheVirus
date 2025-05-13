@@ -80,31 +80,6 @@ void ui::SetState(GameState state) {
     // Force UI refresh
     UpdateMainContainer();
 
-    /*currentState = state;
-
-    switch (state) {
-        case GameState::MENU:
-            mainMenu->Show();
-            break;
-
-        case GameState::PLAYING:
-            mainMenu->Hide();
-            if (CurrentVirus) {
-                CurrentVirus = nullptr; // End battle if there was one
-            }
-            break;
-
-        case GameState::DUNGEON:
-            mainMenu->Hide();
-            if (CurrentVirus) {
-                CurrentVirus = nullptr; // End battle if there was one
-            }
-            break;
-
-        case GameState::BATTLE:
-            mainMenu->Hide();
-            break;
-    }*/
 }
 
 ui::ui() : mainMenu(std::make_shared<mainmenu>()), gameMap(std::make_shared<map>()) {

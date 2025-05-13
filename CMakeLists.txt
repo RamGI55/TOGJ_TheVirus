@@ -49,7 +49,15 @@ add_executable(TOGJ_TheVirus main.cpp
         dungeon.h
         mainmenu.cpp
         mainmenu.h
-        GameState.h)
+        GameState.h
+        logo.cpp
+        logo.h
+        landingmenu.cpp
+        landingmenu.h
+        gametest.cpp
+        gametest.h
+        helpscreen.cpp
+        helpscreen.h)
 
 # Link libraries
 target_link_libraries(TOGJ_TheVirus

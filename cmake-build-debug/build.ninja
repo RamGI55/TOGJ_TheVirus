@@ -133,6 +133,34 @@ build CMakeFiles/TOGJ_TheVirus.dir/mainmenu.cpp.obj: CXX_COMPILER__TOGJ_TheVirus
   OBJECT_DIR = CMakeFiles\TOGJ_TheVirus.dir
   OBJECT_FILE_DIR = CMakeFiles\TOGJ_TheVirus.dir
 
+build CMakeFiles/TOGJ_TheVirus.dir/logo.cpp.obj: CXX_COMPILER__TOGJ_TheVirus_unscanned_Debug E$:/Programming/TOGJ_TheVirus/logo.cpp || cmake_object_order_depends_target_TOGJ_TheVirus
+  DEP_FILE = CMakeFiles\TOGJ_TheVirus.dir\logo.cpp.obj.d
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
+  INCLUDES = -IE:/Programming/TOGJ_TheVirus/cmake-build-debug/_deps/json-src/include -isystem E:/Programming/TOGJ_TheVirus/cmake-build-debug/_deps/ftxui-src/include
+  OBJECT_DIR = CMakeFiles\TOGJ_TheVirus.dir
+  OBJECT_FILE_DIR = CMakeFiles\TOGJ_TheVirus.dir
+
+build CMakeFiles/TOGJ_TheVirus.dir/landingmenu.cpp.obj: CXX_COMPILER__TOGJ_TheVirus_unscanned_Debug E$:/Programming/TOGJ_TheVirus/landingmenu.cpp || cmake_object_order_depends_target_TOGJ_TheVirus
+  DEP_FILE = CMakeFiles\TOGJ_TheVirus.dir\landingmenu.cpp.obj.d
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
+  INCLUDES = -IE:/Programming/TOGJ_TheVirus/cmake-build-debug/_deps/json-src/include -isystem E:/Programming/TOGJ_TheVirus/cmake-build-debug/_deps/ftxui-src/include
+  OBJECT_DIR = CMakeFiles\TOGJ_TheVirus.dir
+  OBJECT_FILE_DIR = CMakeFiles\TOGJ_TheVirus.dir
+
+build CMakeFiles/TOGJ_TheVirus.dir/gametest.cpp.obj: CXX_COMPILER__TOGJ_TheVirus_unscanned_Debug E$:/Programming/TOGJ_TheVirus/gametest.cpp || cmake_object_order_depends_target_TOGJ_TheVirus
+  DEP_FILE = CMakeFiles\TOGJ_TheVirus.dir\gametest.cpp.obj.d
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
+  INCLUDES = -IE:/Programming/TOGJ_TheVirus/cmake-build-debug/_deps/json-src/include -isystem E:/Programming/TOGJ_TheVirus/cmake-build-debug/_deps/ftxui-src/include
+  OBJECT_DIR = CMakeFiles\TOGJ_TheVirus.dir
+  OBJECT_FILE_DIR = CMakeFiles\TOGJ_TheVirus.dir
+
+build CMakeFiles/TOGJ_TheVirus.dir/helpscreen.cpp.obj: CXX_COMPILER__TOGJ_TheVirus_unscanned_Debug E$:/Programming/TOGJ_TheVirus/helpscreen.cpp || cmake_object_order_depends_target_TOGJ_TheVirus
+  DEP_FILE = CMakeFiles\TOGJ_TheVirus.dir\helpscreen.cpp.obj.d
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
+  INCLUDES = -IE:/Programming/TOGJ_TheVirus/cmake-build-debug/_deps/json-src/include -isystem E:/Programming/TOGJ_TheVirus/cmake-build-debug/_deps/ftxui-src/include
+  OBJECT_DIR = CMakeFiles\TOGJ_TheVirus.dir
+  OBJECT_FILE_DIR = CMakeFiles\TOGJ_TheVirus.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target TOGJ_TheVirus
@@ -141,7 +169,7 @@ build CMakeFiles/TOGJ_TheVirus.dir/mainmenu.cpp.obj: CXX_COMPILER__TOGJ_TheVirus
 #############################################
 # Link the executable TOGJ_TheVirus.exe
 
-build TOGJ_TheVirus.exe: CXX_EXECUTABLE_LINKER__TOGJ_TheVirus_Debug CMakeFiles/TOGJ_TheVirus.dir/main.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/game.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/items.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/borough.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/player.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/ui.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/GameUtil.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/virus.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/map.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/locations.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/dungeon.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/mainmenu.cpp.obj | _deps/ftxui-build/libftxui-screen.a _deps/ftxui-build/libftxui-dom.a _deps/ftxui-build/libftxui-component.a _deps/ftxui-build/libftxui-dom.a _deps/ftxui-build/libftxui-screen.a || _deps/ftxui-build/libftxui-component.a _deps/ftxui-build/libftxui-dom.a _deps/ftxui-build/libftxui-screen.a
+build TOGJ_TheVirus.exe: CXX_EXECUTABLE_LINKER__TOGJ_TheVirus_Debug CMakeFiles/TOGJ_TheVirus.dir/main.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/game.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/items.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/borough.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/player.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/ui.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/GameUtil.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/virus.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/map.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/locations.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/dungeon.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/mainmenu.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/logo.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/landingmenu.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/gametest.cpp.obj CMakeFiles/TOGJ_TheVirus.dir/helpscreen.cpp.obj | _deps/ftxui-build/libftxui-screen.a _deps/ftxui-build/libftxui-dom.a _deps/ftxui-build/libftxui-component.a _deps/ftxui-build/libftxui-dom.a _deps/ftxui-build/libftxui-screen.a || _deps/ftxui-build/libftxui-component.a _deps/ftxui-build/libftxui-dom.a _deps/ftxui-build/libftxui-screen.a
   FLAGS = -g
   LINK_LIBRARIES = _deps/ftxui-build/libftxui-screen.a  _deps/ftxui-build/libftxui-dom.a  _deps/ftxui-build/libftxui-component.a  _deps/ftxui-build/libftxui-dom.a  _deps/ftxui-build/libftxui-screen.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\TOGJ_TheVirus.dir

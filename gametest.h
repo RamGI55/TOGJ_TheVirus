@@ -10,10 +10,12 @@
 #include <ftxui/dom/elements.hpp>
 #include <functional>
 
+class game;
+
 namespace TheVirus {
     void StartGame();
 
-    ftxui::Component LandingMenu(std::function <void()> quit);
+    ftxui::Component LandingMenu(std::shared_ptr<game> gameinstance, std::function <void()> quit);
 
 }
 #endif //GAMETEST_H

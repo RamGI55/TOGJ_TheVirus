@@ -10,6 +10,7 @@
 #include "game.h"
 #include "helpscreen.h"
 #include "mainmenu.h"
+#include "boroughselection.h"
 
 namespace TheVirus{
 
@@ -35,12 +36,30 @@ Element IntroDecorator(Element buttons) {
     }
     }
 
-ftxui::Component LandingMenu(std::function<void()> quit) {
+ftxui::Component LandingMenu(std::shared_ptr<game> gameInstance, std::function<void()> quit) {
 
  // if it has the call back function
-    auto StartGame = [&] {
-        mainmenu menu;
-        menu.StartGame();
+    auto StartGame = [gameInstance, quit] {
+       auto screen = ftxui::ScreenInteractive::TerminalOutput();
+
+        boroughselection boroughselector;
+
+        // Show the borough selection screen
+        auto menu = boroughselector.BoroughSelectionMenu(
+            gameInstance->GetBoroughs(),  // Replace with your game's borough data
+            [&screen](const std::string& borough_id) {
+                // When a borough is selected
+                screen.Exit();
+                // Here you would handle going to the location selection screen
+            },
+            [&screen]() {
+                // When the back button is pressed
+                screen.Exit();
+            }
+        );
+
+        // Run the borough selection screen
+        screen.Loop(menu);
         quit();
     };
 

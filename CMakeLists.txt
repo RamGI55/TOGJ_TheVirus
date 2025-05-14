@@ -12,8 +12,8 @@ include(FetchContent)
 #FTXUI
 FetchContent_Declare(
         ftxui
-        GIT_REPOSITORY https://github.com/ArthurSonzogni/FTXUI
-        GIT_TAG v5.0.0
+        GIT_REPOSITORY https://github.com/ArthurSonzogni/FTXUI.git
+        GIT_TAG main
 )
 FetchContent_MakeAvailable(ftxui)
 
@@ -57,7 +57,9 @@ add_executable(TOGJ_TheVirus main.cpp
         gametest.cpp
         gametest.h
         helpscreen.cpp
-        helpscreen.h)
+        helpscreen.h
+        boroughselection.cpp
+        boroughselection.h)
 
 # Link libraries
 target_link_libraries(TOGJ_TheVirus

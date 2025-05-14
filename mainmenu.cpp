@@ -36,42 +36,11 @@ void mainmenu::Initialize(game *gamePtr, std::shared_ptr<map> mapPtr) {
 }
 
 
-
 ftxui::Element mainmenu::Render() const {
     if (!menuActive) {
         return ftxui::text("");  // Don't render if not active
     }
 
-    /*
-    // Add menu items
-    Elements items;
-    for (size_t i = 0; i < menuItems.size(); i++) {
-        Element item = text(menuItems[i]);
-
-        // Highlight selected item
-        if (i == static_cast<size_t>(selectedItem)) {
-            item = item | bold | color(Color::Green);
-            item = hbox({text("> "), item, text(" <")});
-        } else {
-            item = hbox({text("  "), item, text("  ")});
-        }
-
-        items.push_back(item);
-    }
-    */
-
-    /*// Add menu container with buttons
-    menuElements.push_back(window(text("Menu"), menuContainer->Render()));
-
-    // Add instructions
-    menuElements.push_back(
-        vbox({
-            text("Click a button or use arrow keys to navigate, Enter to select"),
-            text("Or type a command: 'start', 'help', 'quit'")
-        }) | color(Color::GrayLight)
-    );
-
-    return vbox(menuElements);*/
 }
 
 bool mainmenu::HandleInput(ftxui::Event event) {

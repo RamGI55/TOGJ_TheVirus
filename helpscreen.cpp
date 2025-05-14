@@ -8,29 +8,40 @@
 #include <ftxui/dom/elements.hpp>
 
 namespace TheVirus {
-
+    using namespace ftxui;
     namespace {
-        using namespace ftxui;
-        Element helpscreen() {
-            return vbox({
-            text(R"(" ")"),
-            text(R"(" enter <location> - Enter a location (e.g., 'enter tower') ")"),
-            text(R"("  look - Look around your current location. ")"),
-            text(R"("  inventory - Check your items")"),
-            text(R"("  ")"),
-            text(R"("  Remember - More you got, More you lost.")"),});
 
-        }
+        Element HelpPage(Element button)
+        {
+            auto description =
+           vbox({
+            paragraphAlignCenter(R"(" ")"),
+            paragraphAlignCenter(R"(" enter <location> - Enter a location (e.g., 'enter tower') ")"),
+            paragraphAlignCenter(R"("  look - Look around your current location. ")"),
+            paragraphAlignCenter(R"("  inventory - Check your items")"),
+            paragraphAlignCenter(R"("  ")"),
+            paragraphAlignCenter(R"("  Remember - More you got, More you lost.")"),
+           });
 
-        Element Decorate(Element inner) {
-            return vbox({
-            helpscreen(),
-            inner,});
+            auto document=  vbox({
+            description | flex_grow,
+                button | center,});
         }
     }
 
-ftxui::Component HelpScreen(std::function<void()> continuation) {
-        auto component = Button ("Continue", continuation, ButtonOption::Animated());
-        return component | Decorate;
+
+ftxui::Component HelpMainPage(std::function<void()> continuation) {
+
+        auto Continue = [&]
+        {
+            continuation();
+        };
+
+        auto ButtonContinue = ButtonOption::Animated(Color::DarkOrange);
+
+        auto button = Container ::Horizontal({
+        Button("Continue", Continue, ButtonContinue)});
+        return button | HelpPage;
+
     }
 }

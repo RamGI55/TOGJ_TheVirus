@@ -45,7 +45,8 @@ ftxui::Component LandingMenu(std::function<void()> quit) {
     };
 
     auto HelpGame = [&] {
-        TheVirus::helpscreen();
+        helpscreen helpscreen;
+        helpscreen.HelpScreen();
 
     };
     auto QuitGame = [&] {

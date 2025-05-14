@@ -15,6 +15,5 @@ namespace TheVirus {
 
     ftxui::Component LandingMenu(std::function <void()> quit);
 
-
 }
 #endif //GAMETEST_H

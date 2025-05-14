@@ -11,37 +11,58 @@ namespace TheVirus {
     using namespace ftxui;
     namespace {
 
-        Element HelpPage(Element button)
-        {
+
+        Element HelpPageDecorator(Element button)
+        {      auto  logo = vbox({
+                paragraphAlignCenter(R"("                                 ")"),
+                paragraphAlignCenter(R"("  |  |   __|   |      _ \    __| ")"),
+                paragraphAlignCenter(R"("  __ |   _|    |      __/  \__ \ ")"),
+                paragraphAlignCenter(R"(" _| _|  ___|  ____|  _|    ____/ ")"),
+                paragraphAlignCenter(R"("                                 ")")
+            });
+
             auto description =
            vbox({
-            paragraphAlignCenter(R"(" ")"),
+               filler(),
+               paragraphAlignCenter("In-Combat Promports "),
+            filler(),
             paragraphAlignCenter(R"(" enter <location> - Enter a location (e.g., 'enter tower') ")"),
             paragraphAlignCenter(R"("  look - Look around your current location. ")"),
             paragraphAlignCenter(R"("  inventory - Check your items")"),
             paragraphAlignCenter(R"("  ")"),
             paragraphAlignCenter(R"("  Remember - More you got, More you lost.")"),
+               filler(),
            });
 
             auto document=  vbox({
+                logo|flex_shrink,
+                separator(),
             description | flex_grow,
                 button | center,});
+            return document | border;
         }
     }
 
+void helpscreen::HelpScreen()
+{
+        auto screen = ScreenInteractive::TerminalOutput();
+        // Create a continue button that exits the screen
+        auto continue_button = Button(
+            "Continue",
+            screen.ExitLoopClosure(),
+            ButtonOption::Animated(Color::DarkOrange)
+        );
 
-ftxui::Component HelpMainPage(std::function<void()> continuation) {
+        // Create a horizontal container for the button
+        auto button_container = Container::Horizontal({
+            continue_button
+        });
 
-        auto Continue = [&]
-        {
-            continuation();
-        };
+        // Apply the decorator to the button container
+        auto component = button_container | HelpPageDecorator;
 
-        auto ButtonContinue = ButtonOption::Animated(Color::DarkOrange);
-
-        auto button = Container ::Horizontal({
-        Button("Continue", Continue, ButtonContinue)});
-        return button | HelpPage;
+        // Run the screen loop - this will block until the continue button is clicked
+        screen.Loop(component);
 
     }
 }

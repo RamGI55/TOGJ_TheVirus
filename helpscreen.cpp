@@ -18,7 +18,7 @@ namespace TheVirus {
                 paragraphAlignCenter(R"("  |  |   __|   |      _ \    __| ")"),
                 paragraphAlignCenter(R"("  __ |   _|    |      __/  \__ \ ")"),
                 paragraphAlignCenter(R"(" _| _|  ___|  ____|  _|    ____/ ")"),
-                paragraphAlignCenter(R"("                                 ")")
+                paragraphAlignCenter(R"("                                  ")")
             });
 
             auto description =

@@ -60,10 +60,6 @@ void game::Initialise() {
         Ui->AddMessage("ERROR creating player: " + std::string(e.what()));
     }
 
-    // Show welcome message and start
-    Ui->AddMessage("THE VIRUS");
-    Ui->AddMessage("Type 'help' for commands");
-    Ui->Run();
 }
 
 void game::Run() {
@@ -87,18 +83,6 @@ void game::ProcessInput(const std::string &command) {
 
     std::string action = tokens[0];
 
-    if (action == "help") {
-        Ui->AddMessage("Available commands:");
-        Ui->AddMessage("  look - Look around the current location");
-        Ui->AddMessage("  enter <borough/location> - Enter a borough or location");
-        Ui->AddMessage("  go <direction> - Move in a direction (north/south/east/west)");
-        Ui->AddMessage("  take <item> - Pick up an item");
-        Ui->AddMessage("  drop <item> - Drop an item from your inventory");
-        Ui->AddMessage("  inventory - List your items");
-        Ui->AddMessage("  clean <virus> - Attack a virus");
-        Ui->AddMessage("  status - Display your status");
-        Ui->AddMessage("  quit - Exit the game");
-    }
     if (action == "enter" && tokens.size() > 1) {
         // Try to enter a borough
         auto boroughIt = Boroughs.find(GameUtil::ToLower(tokens[1]));

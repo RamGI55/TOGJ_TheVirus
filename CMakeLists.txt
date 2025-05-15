@@ -57,7 +57,9 @@ add_executable(TOGJ_TheVirus main.cpp
         gametest.cpp
         gametest.h
         helpscreen.cpp
-        helpscreen.h)
+        helpscreen.h
+        gamedashboard.cpp
+        gamedashboard.h)
 
 # Link libraries
 target_link_libraries(TOGJ_TheVirus

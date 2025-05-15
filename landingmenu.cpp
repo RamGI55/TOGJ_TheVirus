@@ -36,12 +36,13 @@ Element IntroDecorator(Element buttons) {
     }
 
 ftxui::Component LandingMenu(std::function<void()> quit) {
-
+        auto gameInstance = std::make_shared<class game>();
  // if it has the call back function
-    auto StartGame = [&] {
-        mainmenu menu;
-        menu.StartGame();
-        quit();
+        auto StartGame = [gameInstance, quit]() {
+            // Initialize the game properly instead of creating a local menu
+            gameInstance->Initialise();
+            gameInstance->Run();
+            quit();
     };
 
     auto HelpGame = [&] {
